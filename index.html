@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YourBright - 履歴書</title>
+<script>
+// Robust async library loader with multiple CDN fallbacks
+(function(){
+  var libs=[
+    {name:'docx',global:'docx',urls:[
+      'https://unpkg.com/docx@8.2.3/build/index.js',
+      'https://cdn.jsdelivr.net/npm/docx@8.2.3/build/index.js',
+      'https://unpkg.com/docx@7.8.2/build/index.js',
+      'https://cdn.jsdelivr.net/npm/docx@7.8.2/build/index.js'
+    ]},
+    {name:'FileSaver',global:'saveAs',urls:[
+      'https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js',
+      'https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js'
+    ]},
+    {name:'JSZip',global:'JSZip',urls:[
+      'https://unpkg.com/jszip@3.10.1/dist/jszip.min.js',
+      'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js'
+    ]}
+  ];
+  window._libsReady=new Promise(function(resolve){
+    var loaded=0,total=libs.length;
+    libs.forEach(function(lib){tryLoad(lib,0,function(){loaded++;if(loaded===total)resolve();});});
+  });
+  function tryLoad(lib,idx,cb){
+    if(idx>=lib.urls.length){console.error('FAILED to load: '+lib.name);cb();return;}
+    var s=document.createElement('script');s.src=lib.urls[idx];
+    s.onload=function(){
+      if(typeof window[lib.global]!=='undefined'){console.log('Loaded '+lib.name+' from '+s.src);cb();}
+      else{document.head.removeChild(s);tryLoad(lib,idx+1,cb);}
+    };
+    s.onerror=function(){document.head.removeChild(s);tryLoad(lib,idx+1,cb);};
+    document.head.appendChild(s);
+  }
+})();
+</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.container{background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.15);max-width:840px;width:100%;overflow:hidden}
+.header{background:linear-gradient(135deg,#1a237e 0%,#283593 100%);color:#fff;padding:22px 32px;text-align:center}
+.logo{font-size:26px;font-weight:800;letter-spacing:1px;margin-bottom:4px}.logo span{color:#ffd54f}
+.header h1{font-size:19px;margin-bottom:2px}.header p{font-size:11px;opacity:.8}
+.lang-select{padding:14px 32px;border-bottom:1px solid #e0e0e0}
+.lang-select label{font-weight:600;font-size:12px;color:#333;display:block;margin-bottom:8px}
+.lang-grid{display:flex;flex-wrap:wrap;gap:5px}
+.lang-btn{padding:6px 12px;border:2px solid #e0e0e0;border-radius:8px;cursor:pointer;font-size:11px;background:#fff;transition:.2s}
+.lang-btn:hover{border-color:#667eea;background:#f5f3ff}
+.lang-btn.active{border-color:#667eea;background:#667eea;color:#fff}
+.progress-bar{padding:10px 32px;border-bottom:1px solid #eee}
+.progress-track{height:6px;background:#e0e0e0;border-radius:4px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#667eea,#764ba2);border-radius:4px;transition:width .4s}
+.progress-text{font-size:11px;color:#888;margin-top:3px;text-align:right}
+.form-body{padding:22px 32px;min-height:350px}
+.question-card{animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.q-number{font-size:11px;color:#667eea;font-weight:700;text-transform:uppercase;margin-bottom:3px}
+.q-title{font-size:16px;font-weight:700;color:#1a237e;margin-bottom:2px}
+.q-title-jp{font-size:12px;color:#666;margin-bottom:3px}
+.q-subtitle{font-size:12px;color:#999;margin-bottom:10px}
+.q-input{width:100%;padding:11px 13px;border:2px solid #e0e0e0;border-radius:10px;font-size:14px;transition:.2s;outline:none;font-family:inherit}
+.q-input:focus{border-color:#667eea}
+textarea.q-input{min-height:80px;resize:vertical}
+select.q-input{cursor:pointer;appearance:auto}
+.q-input::placeholder{color:#bbb}
+.hint-box{background:#fff8e1;border-left:4px solid #ffc107;padding:10px 14px;border-radius:0 8px 8px 0;margin-bottom:14px;font-size:12px;color:#6d4c00;line-height:1.6}
+.hint-box b{color:#e65100}
+.dynamic-section{margin-top:8px}
+.dynamic-row{display:grid;grid-template-columns:120px 120px 1fr 32px;gap:6px;margin-bottom:7px;align-items:start}
+.dynamic-row input,.dynamic-row textarea{padding:9px;border:2px solid #e0e0e0;border-radius:8px;font-size:12px;outline:none;font-family:inherit;transition:.2s}
+.dynamic-row input:focus,.dynamic-row textarea:focus{border-color:#667eea}
+.dynamic-row textarea{min-height:38px;resize:vertical}
+.btn-add-row{padding:7px 14px;background:#f5f3ff;border:2px dashed #667eea;border-radius:8px;color:#667eea;font-size:12px;cursor:pointer;margin-top:4px;display:inline-block;font-weight:600}
+.btn-add-row:hover{background:#667eea;color:#fff}
+.btn-remove-row{width:28px;height:28px;border-radius:50%;border:none;background:#fee;color:#f44;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;margin-top:2px}
+.btn-remove-row:hover{background:#f44;color:#fff}
+.row-labels{display:grid;grid-template-columns:120px 120px 1fr 32px;gap:6px;margin-bottom:3px;font-size:10px;color:#888;font-weight:600}
+.photo-upload{display:flex;align-items:center;gap:14px;margin-top:8px}
+.photo-preview{width:110px;height:140px;border:2px dashed #ccc;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#fafafa;flex-shrink:0}
+.photo-preview img{width:100%;height:100%;object-fit:cover}
+.photo-placeholder{text-align:center;color:#bbb;font-size:10px;padding:6px}
+.upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+.upload-card{border:2px dashed #ddd;border-radius:10px;padding:14px;text-align:center;transition:.2s;position:relative;min-height:100px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fafafa}
+.upload-card:hover{border-color:#667eea;background:#f8f7ff}
+.upload-card.has-file{border-color:#4caf50;background:#f1f8e9}
+.upload-card .upload-icon{font-size:28px;margin-bottom:4px}
+.upload-card .upload-label{font-size:11px;color:#555;font-weight:600;line-height:1.4}
+.upload-card .upload-status{font-size:10px;color:#4caf50;margin-top:4px;font-weight:600}
+.upload-card img{max-width:70px;max-height:50px;object-fit:contain;border-radius:4px;margin:2px}
+.file-tag{display:inline-block;background:#e3f2fd;color:#1565c0;padding:2px 8px;border-radius:4px;font-size:10px;margin:2px}
+.upload-btn{display:inline-block;padding:6px 14px;background:#667eea;color:#fff;border-radius:6px;font-size:11px;cursor:pointer;margin-top:6px;font-weight:600;border:none}
+.upload-btn:hover{background:#5c6bc0}
+.btn-row{display:flex;justify-content:space-between;padding:12px 32px 20px;gap:10px}
+.btn{padding:10px 24px;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:.2s}
+.btn-prev{background:#f0f0f0;color:#555}.btn-prev:hover{background:#e0e0e0}
+.btn-next{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;margin-left:auto}
+.btn-next:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(102,126,234,.4)}
+.review-table{width:100%;border-collapse:collapse;margin-top:8px}
+.review-table th,.review-table td{padding:7px 10px;text-align:left;border-bottom:1px solid #eee;font-size:11px;vertical-align:top}
+.review-table th{background:#f8f7ff;color:#1a237e;font-weight:600;width:30%;white-space:nowrap}
+.review-table td{color:#333;word-break:break-word}
+.review-photo{width:70px;height:90px;object-fit:cover;border-radius:4px}
+.review-thumb{width:50px;height:40px;object-fit:cover;border-radius:3px;margin:2px}
+.email-list{margin:10px 0}
+.email-item{display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid #e0e0e0;border-radius:8px;margin-bottom:5px;cursor:pointer;transition:.2s}
+.email-item:hover{background:#f8f7ff}
+.email-item input[type="checkbox"]{width:16px;height:16px;accent-color:#667eea}
+.email-item label{cursor:pointer;font-size:12px;color:#333}
+.final-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;justify-content:center}
+.btn-action{padding:11px 20px;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:.2s}
+.btn-download{background:#4caf50;color:#fff}.btn-download:hover{background:#43a047}
+.btn-email{background:#1a237e;color:#fff}.btn-email:hover{background:#283593}
+.btn-restart{background:#f44336;color:#fff}.btn-restart:hover{background:#e53935}
+.success-msg{text-align:center;padding:36px 20px}
+.success-icon{font-size:52px;margin-bottom:12px}
+.success-msg h2{color:#1a237e;margin-bottom:6px}
+.success-msg p{color:#666;font-size:13px}
+.welcome{text-align:center;padding:34px 20px}
+.welcome h2{color:#1a237e;font-size:18px;margin-bottom:8px}
+.welcome p{color:#666;font-size:12px;line-height:1.6;max-width:520px;margin:0 auto 18px}
+.btn-start{padding:12px 36px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;transition:.2s}
+.btn-start:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(102,126,234,.4)}
+.loading-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9999}
+.loading-box{background:#fff;border-radius:16px;padding:32px 40px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.2)}
+.spinner{width:40px;height:40px;border:4px solid #e0e0e0;border-top-color:#667eea;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-box p{color:#333;font-size:14px;font-weight:600}
+.loading-box .sub{color:#888;font-size:11px;margin-top:4px}
+.hidden{display:none!important}
+@media(max-width:600px){
+  .container{border-radius:0}
+  .header,.form-body,.btn-row,.lang-select,.progress-bar{padding-left:14px;padding-right:14px}
+  .dynamic-row{grid-template-columns:1fr 1fr;gap:5px}
+  .dynamic-row textarea{grid-column:1/-1}
+  .btn-remove-row{grid-column:2;justify-self:end}
+  .row-labels{display:none}
+  .upload-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="logo">Your<span>Bright</span></div>
+    <h1>履歴書</h1>
+    <p>Personal Profile Form</p>
+  </div>
+  <div class="lang-select" id="langSection">
+    <label>🌐 Chọn ngôn ngữ / Select Language / 言語を選択:</label>
+    <div class="lang-grid">
+      <button class="lang-btn active" onclick="setLang('vi',this)">🇻🇳 Tiếng Việt</button>
+      <button class="lang-btn" onclick="setLang('id',this)">🇮🇩 Indonesia</button>
+      <button class="lang-btn" onclick="setLang('km',this)">🇰🇭 ខ្មែរ</button>
+      <button class="lang-btn" onclick="setLang('ne',this)">🇳🇵 नेपाली</button>
+      <button class="lang-btn" onclick="setLang('mn',this)">🇲🇳 Монгол</button>
+      <button class="lang-btn" onclick="setLang('zh',this)">🇨🇳 中文</button>
+      <button class="lang-btn" onclick="setLang('my',this)">🇲🇲 မြန်မာ</button>
+      <button class="lang-btn" onclick="setLang('th',this)">🇹🇭 ไทย</button>
+      <button class="lang-btn" onclick="setLang('bn',this)">🇧🇩 বাংলা</button>
+    </div>
+  </div>
+  <div class="progress-bar hidden" id="progressSection">
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="progress-text" id="progressText"></div>
+  </div>
+  <div class="form-body" id="formBody">
+    <div class="welcome" id="welcomeScreen"><h2 id="welcomeTitle"></h2><p id="welcomeDesc"></p><button class="btn-start" id="btnStart" onclick="startForm()"></button></div>
+    <div class="question-card hidden" id="questionArea"></div>
+    <div class="hidden" id="reviewArea"></div>
+    <div class="success-msg hidden" id="successArea">
+      <div class="success-icon">✅</div><h2 id="successTitle"></h2><p id="successDesc"></p>
+      <div class="final-actions">
+        <button class="btn-action btn-download" onclick="doDownloadZip()">📥 <span id="btnDL2"></span></button>
+        <button class="btn-action btn-email" onclick="doEmailZip()">📧 <span id="btnEM2"></span></button>
+        <button class="btn-action btn-restart" onclick="restart()">🔄 <span id="btnRS2"></span></button>
+      </div>
+    </div>
+  </div>
+  <div class="btn-row hidden" id="navButtons">
+    <button class="btn btn-prev hidden" id="btnPrev" onclick="prevQuestion()"></button>
+    <button class="btn btn-next" id="btnNext" onclick="nextQuestion()"></button>
+  </div>
+</div>
+<div class="loading-overlay hidden" id="loadingOverlay">
+  <div class="loading-box"><div class="spinner"></div><p id="loadingText"></p><div class="sub" id="loadingSub"></div></div>
+</div>
+
+<script>
+// =========================================================
+//  FIELDS
+// =========================================================
+const FIELDS=[
+  {key:'photo',jp:'証明写真 (3×4)',type:'photo'},
+  {key:'zairyu',jp:'在留カード（写真）',type:'photo_zairyu'},
+  {key:'cert_photos',jp:'証明書アップロード',type:'cert_upload'},
+  {key:'furigana',jp:'ふりがな',type:'text'},
+  {key:'fullname',jp:'氏名',type:'text'},
+  {key:'dob',jp:'生年月日',type:'date'},
+  {key:'gender',jp:'性別',type:'select',opts:'gender'},
+  {key:'nationality',jp:'国籍',type:'text'},
+  {key:'postcode',jp:'郵便番号',type:'text'},
+  {key:'address',jp:'現住所',type:'text'},
+  {key:'phone',jp:'電話番号',type:'tel'},
+  {key:'email',jp:'メール',type:'email'},
+  {key:'visa',jp:'在留資格',type:'text'},
+  {key:'visa_exp',jp:'在留期限',type:'date'},
+  {key:'spouse',jp:'配偶者の有無',type:'select',opts:'yesno'},
+  {key:'dependents',jp:'扶養者の有無',type:'select',opts:'yesno'},
+  {key:'education',jp:'学歴',type:'dynamic_edu'},
+  {key:'work',jp:'職歴',type:'dynamic_work'},
+  {key:'license',jp:'免許・資格',type:'dynamic_license'},
+  {key:'remarks',jp:'備考',type:'textarea'},
+];
+const TOTAL=FIELDS.length;
+
+// =========================================================
+//  TRANSLATIONS
+// =========================================================
+const L={
+vi:{
+  welcome:"Chào mừng bạn!",welcomeDesc:"Vui lòng trả lời lần lượt các câu hỏi để tạo 履歴書.",
+  start:"Bắt đầu",prev:"← Quay lại",next:"Tiếp theo →",submit:"Xác nhận ✓",
+  download:"Tải ZIP (Word + Ảnh)",sendEmail:"Gửi Email kèm file",restart:"Làm lại",
+  successT:"Hoàn thành!",successD:"履歴書 đã được tạo thành công.",
+  reviewT:"Xem lại thông tin",reviewD:"Vui lòng kiểm tra lại trước khi gửi:",
+  emailT:"Chọn email nhận file:",qLabel:"Câu hỏi",
+  male:"Nam 男",female:"Nữ 女",other:"Khác",yes:"Có 有",no:"Không 無",
+  addRow:"+ Thêm dòng",startDate:"Bắt đầu",endDate:"Kết thúc",detail:"Nội dung",
+  uploadPhoto:"Nhấn để tải ảnh",
+  furigana:"Tên phiên âm (Katakana)",fullname:"Họ và tên đầy đủ",fullnameHint:"⚠️ Viết IN HOA, không dấu, theo tiếng Anh\n(VD: NGUYEN THI HONG)",dob:"Ngày sinh",
+  gender:"Giới tính",photo:"Ảnh chân dung (3×4)",postcode:"Mã bưu điện (〒)",
+  address:"Địa chỉ hiện tại tại Nhật",phone:"Số điện thoại",email:"Email",
+  visa:"Tư cách lưu trú (在留資格)",visa_exp:"Thời hạn lưu trú",
+  nationality:"Quốc tịch",spouse:"Vợ/chồng (配偶者)",
+  dependents:"Người phụ thuộc (扶養者)",education:"Học vấn (学歴)",
+  work:"Kinh nghiệm làm việc (職歴)",license:"Bằng cấp / Chứng chỉ (免許・資格)",
+  remarks:"Ghi chú (備考)",zairyu:"Ảnh thẻ ngoại kiều (在留カード)",
+  cert_photos:"Upload ảnh/file bằng cấp, chứng chỉ",
+  eduHint:"Ghi tên trường học, ngành học",
+  eduNote1:"<b>⚠️ LƯU Ý:</b> Ghi tên trường học <b>cuối cùng tại quốc gia của bạn</b> (trung học, đại học...).",
+  eduNote2:"Nếu có học tại Nhật Bản, ghi <b>toàn bộ tên trường</b> ở Nhật (trung tâm tiếng Nhật, trường dạy nghề...).",
+  eduNote3:"Nếu có học <b>trung tâm tiếng Nhật / trung tâm đào tạo</b> tại quốc gia của bạn, cũng ghi vào mục học vấn này.",
+  workHint:"Ghi công ty, vị trí, nội dung công việc",
+  workNote1:"<b>⚠️ LƯU Ý:</b> Ghi <b>đầy đủ từ khi tốt nghiệp cho đến khi sang Nhật</b>, ghi rõ tháng/năm, <b>tránh để trống khoảng thời gian</b>.",
+  licHint:"Ghi tên bằng cấp/chứng chỉ và kết quả",current:"Hiện tại",pass:"Hợp cách",
+  certSenmon:"Bằng chuyên môn (専門級)",certLicense:"Bằng lái xe (運転免許)",
+  certJlpt:"Chứng chỉ tiếng Nhật (JLPT/NAT...)",certTokutei:"Chứng chỉ Tokutei Gino (特定技能)",
+  certOther:"Chứng chỉ khác",
+  uploadClick:"Nhấn chọn file (ảnh hoặc PDF)",uploaded:"Đã upload",
+  zairyuFront:"Mặt trước",zairyuBack:"Mặt sau",
+  generating:"Đang dịch sang tiếng Nhật và tạo file...",pleaseWait:"Vui lòng đợi",
+  emailReady:"File đã tải xong! Vui lòng đính kèm file ZIP vào email.",
+  multiFile:"Có thể chọn nhiều file cùng lúc",
+  workCountry:"Quốc gia làm việc",workVisa:"Tư cách lưu trú tại Nhật",
+  countryJP:"Nhật Bản 日本",countryHome:"Quốc gia của tôi",countryOther:"Quốc gia khác",
+  workJobType:"Nội dung công việc / Visa",
+  uploadFirst:"📸 Hãy upload ảnh thẻ ngoại kiều và bằng cấp trước. Hệ thống sẽ hiện ảnh để bạn tham khảo khi điền thông tin.",
+  refImages:"📋 Tham khảo ảnh đã upload:",
+  emailStep1:"1️⃣ File ZIP đã tải xuống máy",
+  emailStep2:"2️⃣ Ứng dụng email sẽ mở ra → đính kèm file ZIP vừa tải",
+  emailStep3:"3️⃣ Nhấn Gửi để hoàn tất",
+  ocrReading:"Đang đọc thẻ ngoại kiều...",ocrDone:"Đã đọc xong! Thông tin đã được điền tự động.",ocrFail:"Không đọc được ảnh, vui lòng nhập tay.",ocrReadingCert:"Đang đọc chứng chỉ...",
+  autoFilled:"(đã tự động điền từ thẻ ngoại kiều)",
+},
+id:{
+  welcome:"Selamat Datang!",welcomeDesc:"Silakan jawab pertanyaan berikut untuk membuat 履歴書.",
+  start:"Mulai",prev:"← Kembali",next:"Berikutnya →",submit:"Konfirmasi ✓",
+  download:"Unduh ZIP",sendEmail:"Kirim Email",restart:"Ulangi",
+  successT:"Selesai!",successD:"履歴書 berhasil dibuat.",
+  reviewT:"Periksa",reviewD:"Periksa sebelum mengirim:",emailT:"Pilih email:",qLabel:"Pertanyaan",
+  male:"Laki-laki 男",female:"Perempuan 女",other:"Lainnya",yes:"Ya 有",no:"Tidak 無",
+  addRow:"+ Tambah",startDate:"Mulai",endDate:"Selesai",detail:"Isi",uploadPhoto:"Klik upload",
+  furigana:"Nama Katakana",fullname:"Nama lengkap",fullnameHint:"⚠️ Tulis HURUF BESAR, tanpa aksen, dalam bahasa Inggris\n(contoh: NGUYEN THI HONG)",dob:"Tanggal lahir",
+  gender:"Jenis kelamin",photo:"Foto (3×4)",postcode:"Kode pos (〒)",
+  address:"Alamat di Jepang",phone:"No. telepon",email:"Email",
+  visa:"Status tinggal",visa_exp:"Masa berlaku visa",nationality:"Kewarganegaraan",
+  spouse:"Status pernikahan",dependents:"Tanggungan",education:"Pendidikan (学歴)",
+  work:"Pengalaman kerja (職歴)",license:"Sertifikat (免許・資格)",remarks:"Catatan (備考)",
+  zairyu:"Kartu Tinggal (在留カード)",cert_photos:"Upload foto/file sertifikat",
+  eduHint:"Sekolah dan jurusan",
+  eduNote1:"<b>⚠️:</b> Tulis sekolah <b>terakhir di negara Anda</b>.",
+  eduNote2:"Jika di Jepang, tulis <b>semua sekolah</b> di Jepang.",
+  eduNote3:"Jika belajar di <b>pusat bahasa</b> di negara Anda, tulis juga di sini.",
+  workHint:"Perusahaan, posisi",workNote1:"<b>⚠️:</b> Tulis <b>lengkap dari lulus sampai ke Jepang</b>.",
+  licHint:"Sertifikat dan hasil",current:"Sekarang",pass:"Lulus",
+  certSenmon:"専門級",certLicense:"SIM",certJlpt:"JLPT/NAT",certTokutei:"特定技能",certOther:"Lainnya",
+  uploadClick:"Pilih file (foto/PDF)",uploaded:"Terupload",
+  zairyuFront:"Depan",zairyuBack:"Belakang",
+  generating:"Membuat...",pleaseWait:"Tunggu",emailReady:"File siap!",multiFile:"Bisa pilih banyak file",
+  workCountry:"Negara kerja",workVisa:"Status tinggal di Jepang",
+  countryJP:"Jepang 日本",countryHome:"Negara saya",countryOther:"Negara lain",workJobType:"Jenis pekerjaan / Visa",
+  uploadFirst:"📸 Upload foto kartu tinggal & sertifikat dulu. Foto akan ditampilkan saat mengisi formulir.",
+  refImages:"📋 Referensi foto:",
+  emailStep1:"1️⃣ File ZIP sudah diunduh",emailStep2:"2️⃣ Lampirkan file ZIP di email",emailStep3:"3️⃣ Kirim email",
+},
+km:{welcome:"សូមស្វាគមន៍!",welcomeDesc:"ឆ្លើយសំណួរដើម្បីបង្កើត 履歴書។",start:"ចាប់ផ្តើម",prev:"← ថយក្រោយ",next:"បន្ទាប់ →",submit:"បញ្ជាក់ ✓",download:"ទាញយក ZIP",sendEmail:"ផ្ញើអ៊ីមែល",restart:"ធ្វើម្តងទៀត",successT:"រួចរាល់!",successD:"បង្កើតដោយជោគជ័យ។",reviewT:"ពិនិត្យ",reviewD:"ពិនិត្យមុនផ្ញើ:",emailT:"ជ្រើសអ៊ីមែល:",qLabel:"សំណួរ",male:"ប្រុស 男",female:"ស្រី 女",other:"ផ្សេង",yes:"មាន 有",no:"គ្មាន 無",addRow:"+ បន្ថែម",startDate:"ចាប់ផ្តើម",endDate:"បញ្ចប់",detail:"ព័ត៌មាន",uploadPhoto:"បញ្ចូលរូប",furigana:"ឈ្មោះ Katakana",fullname:"ឈ្មោះពេញ",dob:"ថ្ងៃកំណើត",gender:"ភេទ",photo:"រូបថត (3×4)",postcode:"កូដប្រៃសណីយ៍",address:"អាសយដ្ឋាន",phone:"ទូរស័ព្ទ",email:"អ៊ីមែល",visa:"ស្ថានភាពស្នាក់នៅ",visa_exp:"ផុតកំណត់ទិដ្ឋាការ",nationality:"សញ្ជាតិ",spouse:"អាពាហ៍ពិពាហ៍",dependents:"អ្នកក្នុងបន្ទុក",education:"ការសិក្សា (学歴)",work:"បទពិសោធន៍ (職歴)",license:"វិញ្ញាបនបត្រ (免許・資格)",remarks:"កំណត់សម្គាល់ (備考)",zairyu:"កាតស្នាក់នៅ (在留カード)",cert_photos:"បញ្ចូលឯកសារ",eduHint:"សាលា មុខវិជ្ជា",eduNote1:"<b>⚠️:</b> សរសេរសាលា<b>ចុងក្រោយនៅប្រទេសអ្នក</b>។",eduNote2:"បើនៅជប៉ុន សរសេរ<b>គ្រប់សាលា</b>។",eduNote3:"បើរៀន<b>មជ្ឈមណ្ឌលភាសា</b>ក៏សរសេរផង។",workHint:"ក្រុមហ៊ុន តួនាទី",workNote1:"<b>⚠️:</b> សរសេរ<b>ពេញមុន</b>។",licHint:"វិញ្ញាបនបត្រ និងលទ្ធផល",current:"បច្ចុប្បន្ន",pass:"ជាប់",certSenmon:"専門級",certLicense:"បណ្ណបើកបរ",certJlpt:"JLPT/NAT",certTokutei:"特定技能",certOther:"ផ្សេង",uploadClick:"ជ្រើសឯកសារ",uploaded:"បានបញ្ចូល",zairyuFront:"ផ្នែកមុខ",zairyuBack:"ផ្នែកក្រោយ",generating:"កំពុងបង្កើត...",pleaseWait:"រង់ចាំ",emailReady:"រួចរាល់!",multiFile:"អាចជ្រើសច្រើន",workCountry:"ប្រទេសធ្វើការ",workVisa:"ស្ថានភាពស្នាក់នៅជប៉ុន",countryJP:"ជប៉ុន 日本",countryHome:"ប្រទេសរបស់ខ្ញុំ",countryOther:"ប្រទេសផ្សេង",workJobType:"ការងារ / Visa"},
+ne:{welcome:"स्वागत!",welcomeDesc:"履歴書 बनाउन प्रश्न जवाफ दिनुहोस्।",start:"सुरु",prev:"← पछाडि",next:"अर्को →",submit:"पुष्टि ✓",download:"ZIP डाउनलोड",sendEmail:"इमेल",restart:"फेरि",successT:"पूरा!",successD:"बनाइयो।",reviewT:"जाँच",reviewD:"पठाउनु अघि जाँच:",emailT:"इमेल छान्नुहोस्:",qLabel:"प्रश्न",male:"पुरुष 男",female:"महिला 女",other:"अन्य",yes:"छ 有",no:"छैन 無",addRow:"+ थप",startDate:"सुरु",endDate:"अन्त्य",detail:"विवरण",uploadPhoto:"फोटो अपलोड",furigana:"Katakana नाम",fullname:"पूरा नाम",dob:"जन्म मिति",gender:"लिङ्ग",photo:"फोटो (3×4)",postcode:"पोस्टल कोड",address:"ठेगाना",phone:"फोन",email:"इमेल",visa:"निवास",visa_exp:"भिसा समाप्ति",nationality:"राष्ट्रियता",spouse:"वैवाहिक",dependents:"आश्रित",education:"शिक्षा (学歴)",work:"कार्य अनुभव (職歴)",license:"प्रमाणपत्र (免許・資格)",remarks:"टिप्पणी (備考)",zairyu:"निवास कार्ड (在留カード)",cert_photos:"प्रमाणपत्र अपलोड",eduHint:"विद्यालय, विषय",eduNote1:"<b>⚠️:</b> <b>अन्तिम विद्यालय</b> लेख्नुहोस्।",eduNote2:"जापानमा <b>सबै विद्यालय</b> लेख्नुहोस्।",eduNote3:"<b>भाषा केन्द्र</b>मा पनि यहाँ लेख्नुहोस्।",workHint:"कम्पनी, पद",workNote1:"<b>⚠️:</b> <b>पूरा</b> लेख्नुहोस्।",licHint:"प्रमाणपत्र",current:"हाल",pass:"उत्तीर्ण",certSenmon:"専門級",certLicense:"सवारी",certJlpt:"JLPT/NAT",certTokutei:"特定技能",certOther:"अन्य",uploadClick:"फाइल छान्नुहोस्",uploaded:"अपलोड भयो",zairyuFront:"अगाडि",zairyuBack:"पछाडि",generating:"बनाउँदै...",pleaseWait:"पर्खनुहोस्",emailReady:"तयार!",multiFile:"धेरै फाइल छान्न सकिन्छ",workCountry:"कार्य देश",workVisa:"जापानमा बसोबास",countryJP:"जापान 日本",countryHome:"मेरो देश",countryOther:"अन्य देश",workJobType:"काम / Visa"},
+mn:{welcome:"Тавтай морилно уу!",welcomeDesc:"履歴書 бүтээх.",start:"Эхлэх",prev:"← Буцах",next:"Дараах →",submit:"Батлах ✓",download:"ZIP татах",sendEmail:"Имэйл",restart:"Дахин",successT:"Дууслаа!",successD:"Амжилттай.",reviewT:"Шалгах",reviewD:"Шалгана уу:",emailT:"Имэйл сонгох:",qLabel:"Асуулт",male:"Эрэгтэй 男",female:"Эмэгтэй 女",other:"Бусад",yes:"Тийм 有",no:"Үгүй 無",addRow:"+ Нэмэх",startDate:"Эхлэл",endDate:"Төгсгөл",detail:"Дэлгэрэнгүй",uploadPhoto:"Зураг оруулах",furigana:"Katakana",fullname:"Бүтэн нэр",dob:"Төрсөн огноо",gender:"Хүйс",photo:"Зураг (3×4)",postcode:"Шуудангийн код",address:"Хаяг",phone:"Утас",email:"Имэйл",visa:"Оршин суух",visa_exp:"Визний хугацаа",nationality:"Иргэншил",spouse:"Гэр бүл",dependents:"Асрамж",education:"Боловсрол (学歴)",work:"Ажлын туршлага (職歴)",license:"Гэрчилгээ (免許・資格)",remarks:"Тэмдэглэл (備考)",zairyu:"Оршин суух карт (在留カード)",cert_photos:"Гэрчилгээ оруулах",eduHint:"Сургууль, мэргэжил",eduNote1:"<b>⚠️:</b> Эх орны <b>сүүлийн сургууль</b>.",eduNote2:"Японд <b>бүх сургуулийг</b> бичнэ.",eduNote3:"<b>Хэлний төв</b>-д мөн энд бичнэ.",workHint:"Компани",workNote1:"<b>⚠️:</b> <b>Бүрэн</b> бичнэ.",licHint:"Гэрчилгээ",current:"Одоо",pass:"Тэнцсэн",certSenmon:"専門級",certLicense:"Жолооны",certJlpt:"JLPT/NAT",certTokutei:"特定技能",certOther:"Бусад",uploadClick:"Файл сонгох",uploaded:"Оруулсан",zairyuFront:"Урд",zairyuBack:"Ар",generating:"Үүсгэж байна...",pleaseWait:"Хүлээнэ үү",emailReady:"Бэлэн!",multiFile:"Олон файл сонгох боломжтой",workCountry:"Ажлын улс",workVisa:"Японд оршин суух",countryJP:"Япон 日本",countryHome:"Миний улс",countryOther:"Бусад улс",workJobType:"Ажил / Visa"},
+zh:{welcome:"欢迎！",welcomeDesc:"回答问题创建 履歴書。",start:"开始",prev:"← 返回",next:"下一步 →",submit:"确认 ✓",download:"下载ZIP",sendEmail:"发邮件",restart:"重填",successT:"完成！",successD:"已创建。",reviewT:"确认",reviewD:"发送前确认：",emailT:"选择邮箱：",qLabel:"问题",male:"男",female:"女",other:"其他",yes:"有",no:"无",addRow:"+ 添加",startDate:"开始",endDate:"结束",detail:"内容",uploadPhoto:"上传照片",furigana:"假名",fullname:"全名",dob:"出生日期",gender:"性别",photo:"照片 (3×4)",postcode:"邮编",address:"地址",phone:"电话",email:"邮箱",visa:"在留资格",visa_exp:"在留期限",nationality:"国籍",spouse:"配偶",dependents:"被抚养人",education:"学历 (学歴)",work:"工作经历 (職歴)",license:"资格 (免許・資格)",remarks:"备注 (備考)",zairyu:"在留卡 (在留カード)",cert_photos:"上传证书",eduHint:"学校、专业",eduNote1:"<b>⚠️:</b> 填写<b>本国最后学校</b>。",eduNote2:"日本学习填写<b>所有学校</b>。",eduNote3:"<b>语言中心</b>也填写在此。",workHint:"公司、职位",workNote1:"<b>⚠️:</b> <b>完整填写</b>。",licHint:"证书",current:"至今",pass:"合格",certSenmon:"専門級",certLicense:"驾驶证",certJlpt:"JLPT/NAT",certTokutei:"特定技能",certOther:"其他",uploadClick:"选择文件",uploaded:"已上传",zairyuFront:"正面",zairyuBack:"背面",generating:"生成中...",pleaseWait:"请稍候",emailReady:"已下载！",multiFile:"可选多个文件",workCountry:"工作国家",workVisa:"日本在留资格",countryJP:"日本",countryHome:"我的国家",countryOther:"其他国家",workJobType:"工作 / 签证"},
+my:{welcome:"ကြိုဆိုပါသည်!",welcomeDesc:"履歴書 ဖန်တီးရန်။",start:"စတင်",prev:"← နောက်",next:"ရှေ့ →",submit:"အတည်ပြု ✓",download:"ZIP ဒေါင်းလုဒ်",sendEmail:"အီးမေးလ်",restart:"ပြန်စ",successT:"ပြီးပါပြီ!",successD:"ဖန်တီးပြီးပါပြီ။",reviewT:"စစ်ဆေး",reviewD:"စစ်ဆေးပါ:",emailT:"အီးမေးလ်ရွေးပါ:",qLabel:"မေးခွန်း",male:"ကျား 男",female:"မ 女",other:"အခြား",yes:"ရှိ 有",no:"မရှိ 無",addRow:"+ ထပ်ထည့်",startDate:"စတင်",endDate:"ပြီးဆုံး",detail:"အသေးစိတ်",uploadPhoto:"ဓာတ်ပုံတင်",furigana:"Katakana",fullname:"အမည်",dob:"မွေးနေ့",gender:"ကျား/မ",photo:"ဓာတ်ပုံ (3×4)",postcode:"စာတိုက်ကုဒ်",address:"လိပ်စာ",phone:"ဖုန်း",email:"အီးမေးလ်",visa:"နေထိုင်ခွင့်",visa_exp:"ဗီဇာသက်တမ်း",nationality:"နိုင်ငံသား",spouse:"အိမ်ထောင်ရေး",dependents:"မှီခိုသူ",education:"ပညာရေး (学歴)",work:"အလုပ် (職歴)",license:"လက်မှတ် (免許・資格)",remarks:"မှတ်ချက် (備考)",zairyu:"နေထိုင်ခွင့်ကတ် (在留カード)",cert_photos:"လက်မှတ်တင်ပါ",eduHint:"ကျောင်း",eduNote1:"<b>⚠️:</b> <b>နောက်ဆုံးကျောင်း</b>ရေးပါ။",eduNote2:"ဂျပန်တွင် <b>အားလုံးရေးပါ</b>။",eduNote3:"<b>ဘာသာစကားသင်တန်း</b>လည်း ဤတွင်ရေးပါ။",workHint:"ကုမ္ပဏီ",workNote1:"<b>⚠️:</b> <b>အပြည့်ရေးပါ</b>။",licHint:"လက်မှတ်",current:"လက်ရှိ",pass:"အောင်မြင်",certSenmon:"専門級",certLicense:"ယာဉ်မောင်း",certJlpt:"JLPT/NAT",certTokutei:"特定技能",certOther:"အခြား",uploadClick:"ဖိုင်ရွေးပါ",uploaded:"တင်ပြီး",zairyuFront:"ရှေ့",zairyuBack:"နောက်",generating:"ဖန်တီးနေသည်...",pleaseWait:"ခဏစောင့်ပါ",emailReady:"အဆင်သင့်!",multiFile:"ဖိုင်များစွာရွေးနိုင်",workCountry:"အလုပ်လုပ်သည့်နိုင်ငံ",workVisa:"ဂျပန်နေထိုင်ခွင့်",countryJP:"ဂျပန် 日本",countryHome:"ကျွန်ုပ်နိုင်ငံ",countryOther:"အခြားနိုင်ငံ",workJobType:"အလုပ် / Visa"},
+th:{welcome:"ยินดีต้อนรับ!",welcomeDesc:"ตอบคำถามเพื่อสร้าง 履歴書",start:"เริ่ม",prev:"← ย้อน",next:"ถัดไป →",submit:"ยืนยัน ✓",download:"ดาวน์โหลด ZIP",sendEmail:"ส่งอีเมล",restart:"เริ่มใหม่",successT:"เสร็จ!",successD:"สร้างเรียบร้อย",reviewT:"ตรวจสอบ",reviewD:"ตรวจก่อนส่ง:",emailT:"เลือกอีเมล:",qLabel:"คำถาม",male:"ชาย 男",female:"หญิง 女",other:"อื่นๆ",yes:"มี 有",no:"ไม่มี 無",addRow:"+ เพิ่ม",startDate:"เริ่ม",endDate:"สิ้นสุด",detail:"รายละเอียด",uploadPhoto:"อัปโหลด",furigana:"ชื่อ Katakana",fullname:"ชื่อ-สกุล",dob:"วันเกิด",gender:"เพศ",photo:"รูป (3×4)",postcode:"รหัสไปรษณีย์",address:"ที่อยู่",phone:"เบอร์โทร",email:"อีเมล",visa:"สถานะวีซ่า",visa_exp:"หมดอายุวีซ่า",nationality:"สัญชาติ",spouse:"สมรส",dependents:"ผู้อยู่ในอุปการะ",education:"การศึกษา (学歴)",work:"ประสบการณ์ (職歴)",license:"ใบรับรอง (免許・資格)",remarks:"หมายเหตุ (備考)",zairyu:"บัตรพำนัก (在留カード)",cert_photos:"อัปโหลดใบรับรอง",eduHint:"โรงเรียน สาขา",eduNote1:"<b>⚠️:</b> เขียน<b>โรงเรียนสุดท้าย</b>",eduNote2:"ญี่ปุ่น เขียน<b>ทุกโรงเรียน</b>",eduNote3:"<b>ศูนย์ภาษา</b>ก็เขียนในนี้ด้วย",workHint:"บริษัท ตำแหน่ง",workNote1:"<b>⚠️:</b> เขียน<b>ครบ</b>",licHint:"ใบรับรอง",current:"ปัจจุบัน",pass:"ผ่าน",certSenmon:"専門級",certLicense:"ใบขับขี่",certJlpt:"JLPT/NAT",certTokutei:"特定技能",certOther:"อื่นๆ",uploadClick:"เลือกไฟล์",uploaded:"อัปโหลดแล้ว",zairyuFront:"ด้านหน้า",zairyuBack:"ด้านหลัง",generating:"กำลังสร้าง...",pleaseWait:"กรุณารอ",emailReady:"ไฟล์พร้อม!",multiFile:"เลือกหลายไฟล์ได้",workCountry:"ประเทศทำงาน",workVisa:"สถานะวีซ่าญี่ปุ่น",countryJP:"ญี่ปุ่น 日本",countryHome:"ประเทศของฉัน",countryOther:"ประเทศอื่น",workJobType:"งาน / วีซ่า"},
+bn:{welcome:"স্বাগতম!",welcomeDesc:"履歴書 তৈরি করুন।",start:"শুরু",prev:"← পিছনে",next:"পরবর্তী →",submit:"নিশ্চিত ✓",download:"ZIP ডাউনলোড",sendEmail:"ইমেইল",restart:"আবার",successT:"সম্পন্ন!",successD:"তৈরি হয়েছে।",reviewT:"পরীক্ষা",reviewD:"পাঠানোর আগে পরীক্ষা:",emailT:"ইমেইল নির্বাচন:",qLabel:"প্রশ্ন",male:"পুরুষ 男",female:"মহিলা 女",other:"অন্যান্য",yes:"হ্যাঁ 有",no:"না 無",addRow:"+ যোগ",startDate:"শুরু",endDate:"শেষ",detail:"বিবরণ",uploadPhoto:"ছবি আপলোড",furigana:"Katakana নাম",fullname:"পূর্ণ নাম",dob:"জন্ম তারিখ",gender:"লিঙ্গ",photo:"ছবি (3×4)",postcode:"পোস্টাল কোড",address:"ঠিকানা",phone:"ফোন",email:"ইমেইল",visa:"বসবাসের মর্যাদা",visa_exp:"ভিসার মেয়াদ",nationality:"জাতীয়তা",spouse:"বৈবাহিক",dependents:"নির্ভরশীল",education:"শিক্ষা (学歴)",work:"কাজের অভিজ্ঞতা (職歴)",license:"সার্টিফিকেট (免許・資格)",remarks:"মন্তব্য (備考)",zairyu:"বাসস্থান কার্ড (在留カード)",cert_photos:"সার্টিফিকেট আপলোড",eduHint:"বিদ্যালয়, বিষয়",eduNote1:"<b>⚠️:</b> <b>শেষ বিদ্যালয়</b> লিখুন।",eduNote2:"জাপানে <b>সব বিদ্যালয়</b> লিখুন।",eduNote3:"<b>ভাষা কেন্দ্রে</b>ও এখানে লিখুন।",workHint:"কোম্পানি",workNote1:"<b>⚠️:</b> <b>পূর্ণ</b> লিখুন।",licHint:"সার্টিফিকেট",current:"বর্তমান",pass:"উত্তীর্ণ",certSenmon:"専門級",certLicense:"ড্রাইভিং",certJlpt:"JLPT/NAT",certTokutei:"特定技能",certOther:"অন্যান্য",uploadClick:"ফাইল নির্বাচন",uploaded:"আপলোড হয়েছে",zairyuFront:"সামনে",zairyuBack:"পিছনে",generating:"তৈরি হচ্ছে...",pleaseWait:"অপেক্ষা করুন",emailReady:"প্রস্তুত!",multiFile:"একাধিক ফাইল নির্বাচন করুন",workCountry:"কর্মদেশ",workVisa:"জাপানে বসবাসের মর্যাদা",countryJP:"জাপান 日本",countryHome:"আমার দেশ",countryOther:"অন্য দেশ",workJobType:"কাজ / ভিসা"}
+};
+
+// =========================================================
+//  STATE
+// =========================================================
+let lang='vi',step=0,data={};
+let photoData=null;
+// Zairyu: each side can have multiple files
+let zairyuFront=[],zairyuBack=[];
+// Certs: each category stores array of {name,data}
+let certFiles={certSenmon:[],certLicense:[],certJlpt:[],certTokutei:[],certOther:[]};
+let eduRows=[{start:'',end:'',detail:''}];
+let workRows=[{start:'',end:'',country:'home',visa:'',detail:''}];
+let licRows=[{date:'',detail:''}];
+const emails=["nguyen.thi.hong@yourbright.co.jp","bui.dinh.thanh@yourbright.co.jp","aung.zayar.myo@yourbright.co.jp","yu.nandar.mon@yourbright.co.jp","chom.sreynak@yourbright.co.jp","muslikhun.ahmad@yourbright.co.jp"];
+
+function t(k){return(L[lang]&&L[lang][k])||L['vi'][k]||k}
+function setLang(l,btn){lang=l;document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');updateUI();}
+function updateUI(){
+  document.getElementById('welcomeTitle').textContent=t('welcome');
+  document.getElementById('welcomeDesc').textContent=t('welcomeDesc');
+  document.getElementById('btnStart').textContent=t('start');
+  document.getElementById('successTitle').textContent=t('successT');
+  document.getElementById('successDesc').textContent=t('successD');
+  document.getElementById('btnDL2').textContent=t('download');
+  document.getElementById('btnEM2').textContent=t('sendEmail');
+  document.getElementById('btnRS2').textContent=t('restart');
+}
+updateUI();
+
+// =========================================================
+//  FORM FLOW
+// =========================================================
+function startForm(){
+  document.getElementById('welcomeScreen').classList.add('hidden');
+  document.getElementById('questionArea').classList.remove('hidden');
+  document.getElementById('progressSection').classList.remove('hidden');
+  document.getElementById('navButtons').classList.remove('hidden');
+  document.getElementById('langSection').classList.add('hidden');
+  showStep();
+}
+function getOpts(ty){
+  if(ty==='gender')return[t('male'),t('female'),t('other')];
+  if(ty==='yesno')return[t('no'),t('yes')];
+  return[];
+}
+function showStep(){
+  const f=FIELDS[step],area=document.getElementById('questionArea');
+  document.getElementById('progressFill').style.width=((step+1)/TOTAL*100)+'%';
+  document.getElementById('progressText').textContent=`${step+1} / ${TOTAL}`;
+  document.getElementById('btnPrev').classList.toggle('hidden',step===0);
+  document.getElementById('btnPrev').textContent=t('prev');
+  document.getElementById('btnNext').textContent=step===TOTAL-1?t('submit'):t('next');
+  const fl=t(f.key),sv=data[f.key]||'';
+  let h=`<div class="q-number">${t('qLabel')} ${step+1} / ${TOTAL}</div><div class="q-title">${fl}</div><div class="q-title-jp">${f.jp}</div><div style="height:6px"></div>`;
+  // Show hint for fullname field
+  if(f.key==='fullname'&&t('fullnameHint'))h+=`<div class="hint-box">${t('fullnameHint').replace(/\n/g,'<br>')}</div>`;
+  // Show auto-filled indicator
+  // Auto-fill indicator (disabled — manual input only)
+  if(f.type==='text'||f.type==='tel'||f.type==='email')h+=`<input type="${f.type}" class="q-input" id="qInput" value="${sv}">`;
+  else if(f.type==='date')h+=`<input type="date" class="q-input" id="qInput" value="${sv}">`;
+  else if(f.type==='select'){const o=getOpts(f.opts);h+=`<select class="q-input" id="qInput"><option value="">--</option>${o.map(x=>`<option value="${x}"${sv===x?' selected':''}>${x}</option>`).join('')}</select>`;}
+  else if(f.type==='textarea')h+=`<textarea class="q-input" id="qInput" rows="4">${sv}</textarea>`;
+  else if(f.type==='photo')h+=buildPhotoUpload();
+  else if(f.type==='photo_zairyu'){h+=`<div class="hint-box">${t('uploadFirst')||'📸 Upload your residence card and certificates first. They will be shown as reference while you fill in the form.'}</div>`;h+=buildZairyu();}
+
+  else if(f.type==='dynamic_edu')h+=buildEdu();
+  else if(f.type==='dynamic_work')h+=buildWork();
+  else if(f.type==='dynamic_license')h+=buildLic();
+  else if(f.type==='cert_upload')h+=buildCerts();
+  // Show reference images panel when filling text fields (after upload steps)
+  if(!['photo','photo_zairyu','cert_upload'].includes(f.type) && !f.type.startsWith('dynamic_') && hasUploadedFiles()){
+    h+=buildRefPanel();
+  }
+  area.innerHTML=h;
+  const inp=document.getElementById('qInput');
+  if(inp){setTimeout(()=>inp.focus(),80);if(f.type!=='textarea')inp.addEventListener('keydown',e=>{if(e.key==='Enter')nextQuestion()});}
+}
+// Check if user has uploaded any reference files
+function hasUploadedFiles(){return zairyuFront.length||zairyuBack.length||Object.values(certFiles).some(a=>a.length);}
+// Build collapsible reference panel showing uploaded images
+function buildRefPanel(){
+  const imgs=[];
+  zairyuFront.forEach(f=>{if(f.data.startsWith('data:image/'))imgs.push({label:'在留カード 表',src:f.data});});
+  zairyuBack.forEach(f=>{if(f.data.startsWith('data:image/'))imgs.push({label:'在留カード 裏',src:f.data});});
+  Object.entries(certFiles).forEach(([k,arr])=>{arr.forEach(f=>{if(f.data.startsWith('data:image/'))imgs.push({label:t(k),src:f.data});});});
+  if(!imgs.length)return'';
+  let h=`<details class="ref-panel" style="margin-top:14px;background:#f0f4ff;border:1px solid #c5cae9;border-radius:10px;padding:10px 14px">
+    <summary style="cursor:pointer;font-size:12px;font-weight:600;color:#3949ab">${t('refImages')||'📋 Reference images:'} (${imgs.length})</summary>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;max-height:250px;overflow-y:auto">`;
+  imgs.forEach(im=>{h+=`<div style="text-align:center"><img src="${im.src}" style="max-width:180px;max-height:120px;border-radius:6px;border:1px solid #ccc"><div style="font-size:10px;color:#666;margin-top:2px">${im.label}</div></div>`;});
+  h+=`</div></details>`;
+  return h;
+}
+
+// ===== PHOTO =====
+function buildPhotoUpload(){
+  return `<div class="photo-upload">
+    <div class="photo-preview">${photoData?`<img src="${photoData}">`:`<div class="photo-placeholder">${t('uploadPhoto')}</div>`}</div>
+    <div><input type="file" id="pf_main" accept="image/*" style="display:none" onchange="onMainPhoto(this)">
+    <button class="upload-btn" onclick="document.getElementById('pf_main').click()">📷 ${t('uploadPhoto')}</button></div>
+  </div>`;
+}
+function onMainPhoto(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{photoData=e.target.result;showStep();};r.readAsDataURL(f);}
+
+// ===== ZAIRYU =====
+function buildZairyu(){
+  let h=`<div class="q-subtitle">${t('zairyu')}</div><div class="upload-grid">`;
+  // Front
+  h+=`<div class="upload-card ${zairyuFront.length?'has-file':''}">
+    ${zairyuFront.length?zairyuFront.map(f=>f.data.startsWith('data:image/')?`<img src="${f.data}">`:`<span class="file-tag">📎 ${f.name}</span>`).join('')+`<div class="upload-status">${t('zairyuFront')} - ${t('uploaded')} (${zairyuFront.length})</div>`:`<div class="upload-icon">🪪</div><div class="upload-label">${t('zairyuFront')}</div>`}
+    <input type="file" id="zf_front" accept="image/*,.pdf,.doc,.docx" multiple style="display:none" onchange="onZairyu('front',this)">
+    <button class="upload-btn" onclick="event.stopPropagation();document.getElementById('zf_front').click()">${t('uploadClick')}</button>
+  </div>`;
+  // Back
+  h+=`<div class="upload-card ${zairyuBack.length?'has-file':''}">
+    ${zairyuBack.length?zairyuBack.map(f=>f.data.startsWith('data:image/')?`<img src="${f.data}">`:`<span class="file-tag">📎 ${f.name}</span>`).join('')+`<div class="upload-status">${t('zairyuBack')} - ${t('uploaded')} (${zairyuBack.length})</div>`:`<div class="upload-icon">🪪</div><div class="upload-label">${t('zairyuBack')}</div>`}
+    <input type="file" id="zf_back" accept="image/*,.pdf,.doc,.docx" multiple style="display:none" onchange="onZairyu('back',this)">
+    <button class="upload-btn" onclick="event.stopPropagation();document.getElementById('zf_back').click()">${t('uploadClick')}</button>
+  </div></div>`;
+  return h;
+}
+function onZairyu(side,inp){
+  const files=Array.from(inp.files);if(!files.length)return;
+  let loaded=0;const target=side==='front'?zairyuFront:zairyuBack;
+  files.forEach(file=>{const r=new FileReader();r.onload=e=>{
+    target.push({name:file.name,data:e.target.result});loaded++;
+    if(loaded===files.length){
+      showStep();
+      // Auto-OCR both sides of 在留カード
+      if(file.type.startsWith('image/'))runOCR(e.target.result,side);
+    }
+  };r.readAsDataURL(file);});
+}
+
+// ===== OCR ENGINE =====
+let ocrWorker=null,ocrFrontDone=false,ocrBackDone=false;
+async function ensureTesseract(){
+  if(typeof Tesseract!=='undefined')return;
+  await new Promise((resolve,reject)=>{
+    const s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+    s.onload=resolve;s.onerror=()=>{
+      const s2=document.createElement('script');s2.src='https://unpkg.com/tesseract.js@5/dist/tesseract.min.js';
+      s2.onload=resolve;s2.onerror=reject;document.head.appendChild(s2);
+    };document.head.appendChild(s);
+  });
+}
+function preprocessImage(imgDataUrl){
+  return new Promise((resolve)=>{
+    const img=new Image();
+    img.onload=()=>{
+      const c=document.createElement('canvas');
+      c.width=img.width;c.height=img.height;
+      const ctx=c.getContext('2d');
+      ctx.drawImage(img,0,0);
+      // Grayscale + high contrast for better OCR
+      const d=ctx.getImageData(0,0,c.width,c.height);
+      const px=d.data;
+      for(let i=0;i<px.length;i+=4){
+        const gray=0.299*px[i]+0.587*px[i+1]+0.114*px[i+2];
+        // Increase contrast: stretch histogram
+        const v=Math.min(255,Math.max(0,(gray-80)*1.8));
+        px[i]=px[i+1]=px[i+2]=v;
+      }
+      ctx.putImageData(d,0,0);
+      resolve(c.toDataURL('image/png'));
+    };
+    img.onerror=()=>resolve(imgDataUrl); // fallback to original
+    img.src=imgDataUrl;
+  });
+}
+async function ocrImage(imgDataUrl){
+  await ensureTesseract();
+  // Preprocess: grayscale + contrast enhancement
+  const processed=await preprocessImage(imgDataUrl);
+  const worker=await Tesseract.createWorker('eng+jpn',1,{
+    workerPath:'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/worker.min.js',
+    corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5/tesseract-core-simd-lstm.wasm.js',
+  });
+  const{data:{text}}=await worker.recognize(processed);
+  await worker.terminate();
+  return text;
+}
+function showOcrStatus(msg,color){
+  let el=document.getElementById('ocrStatus');
+  if(!el){el=document.createElement('div');el.id='ocrStatus';el.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a237e;color:#fff;padding:10px 24px;border-radius:20px;font-size:13px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.3)';document.body.appendChild(el);}
+  el.textContent=msg;if(color)el.style.background=color;
+  return el;
+}
+
+// ===== OCR: 在留カード (disabled auto-fill — ứng viên tự điền) =====
+async function runOCR(imgDataUrl,side){
+  // OCR auto-fill disabled — chỉ upload ảnh, ứng viên tự điền thông tin
+  console.log('OCR disabled — candidate fills manually');
+  return;
+  const el=showOcrStatus('🔍 '+(t('ocrReading')||'Đang đọc thẻ ngoại kiều...'));
+  try{
+    const text=await ocrImage(imgDataUrl);
+    console.log(`OCR ${side} raw:`,text);
+    if(side==='front'){parseZairyuFront(text);ocrFrontDone=true;}
+    else{parseZairyuBack(text);ocrBackDone=true;}
+    // Auto-lookup postal code from address (always re-lookup when back side provides new address)
+    if(data.address)await lookupPostalCode(data.address);
+    el.textContent='✅ '+(t('ocrDone')||'Đã đọc xong!');el.style.background='#2e7d32';
+    setTimeout(()=>{el.remove();showStep();},2000);
+  }catch(e){
+    console.error('OCR error:',e);
+    el.textContent='⚠️ '+(t('ocrFail')||'Không đọc được, vui lòng nhập tay');el.style.background='#e65100';
+    setTimeout(()=>el.remove(),3000);
+  }
+}
+
+function parseZairyuFront(text){
+  const lines=text.split('\n').map(l=>l.trim()).filter(l=>l);
+  // Words that appear on the card but are NOT the person's name
+  const CARD_WORDS=/\b(GOVERNMENT|JAPAN|RESIDENCE|CARD|IMMIGRATION|STATUS|DATE|BIRTH|MALE|FEMALE|NATIONALITY|NAME|BUREAU|MINISTRY|JUSTICE|ADDRESS|PERIOD|STAY|EXPIRATION|NUMBER|TYPE|PERMIT|FOREIGN|NATIONAL|CERTIFICATE|PHOTO|SEX|VALID|AUTHORITY|OF)\b/gi;
+  function isCardText(s){
+    // Remove known card words; if nothing meaningful remains (less than 3 chars), it's card text
+    const cleaned=s.replace(CARD_WORDS,'').replace(/[\s\-\.]+/g,' ').trim();
+    return cleaned.length<3;
+  }
+  // NAME: multiple strategies to find English uppercase name from 在留カード
+  if(!data.fullname){
+    let foundName='';
+    // Strategy 1: find text on same line as 氏名 or NAME label
+    for(let i=0;i<lines.length;i++){
+      if(/氏\s*名|^NAME\b/i.test(lines[i])){
+        // Extract everything after the label
+        const sameLine=lines[i].replace(/.*?(?:氏\s*名|NAME)\s*[:：]?\s*/i,'').trim();
+        const upperPart=sameLine.match(/([A-Z][A-Z\s\-\.]{2,})/);
+        if(upperPart&&upperPart[1].trim().length>3&&!isCardText(upperPart[1])){foundName=upperPart[1].trim();break;}
+        // Check next line(s) for the name
+        for(let j=1;j<=2&&i+j<lines.length;j++){
+          const nextLine=lines[i+j];
+          const nextUp=nextLine.match(/([A-Z][A-Z\s\-\.]{2,})/);
+          if(nextUp&&nextUp[1].trim().length>3&&!isCardText(nextUp[1])){foundName=nextUp[1].trim();break;}
+        }
+        if(foundName)break;
+      }
+    }
+    // Strategy 2: any line that is mostly uppercase English and NOT card text
+    if(!foundName){
+      const nameLines=lines.filter(l=>/^[A-Z][A-Z\s\-\.]{3,}$/.test(l)&&l.length>3&&!isCardText(l));
+      if(nameLines.length)foundName=nameLines.sort((a,b)=>b.length-a.length)[0];
+    }
+    // Strategy 3: extract uppercase substring that contains at least 2 words and is NOT card text
+    if(!foundName){
+      for(const l of lines){
+        const matches=[...l.matchAll(/([A-Z][A-Z]+(?:\s+[A-Z][A-Z]+)+)/g)];
+        for(const m of matches){
+          if(m[1].length>5&&!isCardText(m[1])){foundName=m[1].trim();break;}
+        }
+        if(foundName)break;
+      }
+    }
+    if(foundName){data.fullname=foundName.replace(/\s+/g,' ').trim();}
+    console.log('OCR name extraction:',foundName||'(not found)');
+  }
+  // DATE OF BIRTH — multiple date formats
+  if(!data.dob){
+    const dobPats=[
+      /(\d{4})\s*[年\/\.\-]\s*(\d{1,2})\s*[月\/\.\-]\s*(\d{1,2})\s*日?\s*生/,
+      /(?:生年月日|DATE\s*OF\s*BIRTH)[^\d]*(\d{4})\s*[年\/\.\-]\s*(\d{1,2})\s*[月\/\.\-]\s*(\d{1,2})/i,
+      /(\d{4})\s*[年\/\.\-]\s*(\d{1,2})\s*[月\/\.\-]\s*(\d{1,2})\s*日/,
+    ];
+    for(const dp of dobPats){
+      const dm=text.match(dp);
+      if(dm){const yr=parseInt(dm[1]);if(yr>1950&&yr<2015){data.dob=`${dm[1]}-${dm[2].padStart(2,'0')}-${dm[3].padStart(2,'0')}`;break;}}
+    }
+  }
+  // GENDER — check both Japanese and English
+  if(!data.gender){
+    if(/男\s*性|[^a-zA-Z]男[^a-zA-Z]|Male|MALE|性\s*別.*?男/.test(text))data.gender=t('male');
+    else if(/女\s*性|[^a-zA-Z]女[^a-zA-Z]|Female|FEMALE|性\s*別.*?女/.test(text))data.gender=t('female');
+  }
+  // NATIONALITY — multiple patterns, flexible spacing
+  if(!data.nationality){
+    const natPats=[/国\s*籍[・\s:：]*([^\n\r]{2,20})/,/(?:NATIONALITY)[・\s:：]*([^\n\r]{2,20})/i];
+    for(const np of natPats){
+      const nm=text.match(np);
+      if(nm){
+        let nat=nm[1].trim().replace(/[,。、\/]/g,'').replace(/\s*地域\s*/,'');
+        // Map common OCR results to proper names
+        const natMap={'ベトナム':'ベトナム','べトナム':'ベトナム','インドネシア':'インドネシア','ネパール':'ネパール','ミャンマー':'ミャンマー','中国':'中国','カンボジア':'カンボジア','モンゴル':'モンゴル','タイ':'タイ','バングラデシュ':'バングラデシュ','フィリピン':'フィリピン'};
+        data.nationality=natMap[nat]||JP_DICT[nat.toLowerCase()]||nat;
+        break;
+      }
+    }
+    // Fallback: scan for known nationality names in text
+    if(!data.nationality){
+      const knownNat=['ベトナム','インドネシア','ネパール','ミャンマー','中国','カンボジア','モンゴル','タイ','バングラデシュ','フィリピン','韓国','ブラジル','ペルー'];
+      for(const kn of knownNat){if(text.includes(kn)){data.nationality=kn;break;}}
+    }
+  }
+  // VISA TYPE — multiple OCR patterns + fallback to known types
+  if(!data.visa){
+    const visaPats=[/在留資格[・\s:：]*([^\n\r]{2,30})/,/在\s*留\s*資\s*格[・\s:：]*([^\n\r]{2,30})/,/(?:STATUS\s*OF\s*RESIDENCE|STATUS)[・\s:：]*([^\n\r]{2,30})/i];
+    for(const vp of visaPats){const vm=text.match(vp);if(vm){data.visa=vm[1].trim().replace(/[。,、]/g,'');break;}}
+    // Fallback: look for known visa types directly in text
+    if(!data.visa){
+      const knownVisa=['技能実習1号','技能実習2号','技能実習3号','技能実習１号','技能実習２号','技能実習３号','特定技能1号','特定技能2号','特定技能１号','特定技能２号','技術・人文知識・国際業務','留学','家族滞在','永住者','定住者','特定活動'];
+      for(const kv of knownVisa){if(text.includes(kv)){data.visa=kv.replace(/１/g,'1').replace(/２/g,'2').replace(/３/g,'3');break;}}
+    }
+    // Fallback: partial match (OCR might read 技能実習 without the number)
+    if(!data.visa){
+      if(/技能\s*実習/.test(text)){
+        const numM=text.match(/技能\s*実習\s*[1-3１-３]?\s*号?/);
+        data.visa=numM?numM[0].replace(/\s+/g,'').replace(/１/g,'1').replace(/２/g,'2').replace(/３/g,'3'):'技能実習';
+      }else if(/特定\s*技能/.test(text)){
+        const numM=text.match(/特定\s*技能\s*[1-2１-２]?\s*号?/);
+        data.visa=numM?numM[0].replace(/\s+/g,'').replace(/１/g,'1').replace(/２/g,'2'):'特定技能';
+      }
+    }
+  }
+  // VISA EXPIRY — multiple patterns + smart date detection
+  if(!data.visa_exp){
+    const expPats=[
+      /(?:満了日?|期限|在留期間|PERIOD\s*OF\s*STAY|EXPIR)[^\d]*(\d{4})\s*[年\/\.\-]\s*(\d{1,2})\s*[月\/\.\-]\s*(\d{1,2})/i,
+      /(\d{4})\s*[年\/\.\-]\s*(\d{1,2})\s*[月\/\.\-]\s*(\d{1,2})\s*(?:日?\s*まで)/,
+    ];
+    for(const ep of expPats){const em=text.match(ep);if(em){const yr=parseInt(em[1]);if(yr>2020&&yr<2040){data.visa_exp=`${em[1]}-${em[2].padStart(2,'0')}-${em[3].padStart(2,'0')}`;break;}}}
+    // Smart: find all dates, DOB is in the past, expiry is in the future
+    if(!data.visa_exp){
+      const allDates=[...text.matchAll(/(\d{4})\s*[年\/\.\-]\s*(\d{1,2})\s*[月\/\.\-]\s*(\d{1,2})/g)];
+      const now=new Date();
+      for(const dm of allDates){
+        const yr=parseInt(dm[1]),mo=parseInt(dm[2]),da=parseInt(dm[3]);
+        const d=new Date(yr,mo-1,da);
+        // Future date = likely expiry (not DOB)
+        if(d>now&&yr>2020&&yr<2040){data.visa_exp=`${dm[1]}-${String(mo).padStart(2,'0')}-${String(da).padStart(2,'0')}`;break;}
+      }
+    }
+  }
+  // ADDRESS (front) - multiple patterns for OCR variants
+  let addrFound=null;
+  const addrPats=[/住居地[・\s:：]*([^\n\r]{5,80})/,/住\s*居\s*地[・\s:：]*([^\n\r]{5,80})/,/(?:居所|住所)[・\s:：]*([^\n\r]{5,80})/];
+  for(const pat of addrPats){const am=text.match(pat);if(am){addrFound=am[1].trim();break;}}
+  // Also try: line containing prefecture name
+  if(!addrFound){
+    for(const l of lines){
+      if(/(東京都|北海道|(?:京都|大阪)府|.{2,3}県).{3,}[市区町村]/.test(l)){
+        addrFound=l.replace(/^.*?(東京都|北海道|(?:京都|大阪)府)/,'$1').trim();break;
+      }
+    }
+  }
+  if(addrFound&&!data.address)data.address=addrFound;
+  console.log('OCR front extracted:',{fullname:data.fullname,dob:data.dob,gender:data.gender,nationality:data.nationality,visa:data.visa,visa_exp:data.visa_exp,address:data.address});
+}
+
+function parseZairyuBack(text){
+  const lines=text.split('\n').map(l=>l.trim()).filter(l=>l);
+  // Back side: look for LATEST address (住居地変更 section)
+  // Multiple patterns for OCR variants
+  const addrPats=[/(?:住居地|新住居地|変更後|住\s*居\s*地|居所|住所)[・\s:：]*([^\n\r]{5,80})/g];
+  let allAddrs=[];
+  for(const pat of addrPats){let am;while((am=pat.exec(text))!==null){if(am[1].trim().length>5)allAddrs.push(am[1].trim());}}
+  // Also find lines with prefecture names (fallback)
+  for(const l of lines){
+    if(/(東京都|北海道|(?:京都|大阪)府|.{2,3}県).{3,}[市区町村]/.test(l)){
+      const addr=l.replace(/^.*?(東京都|北海道|(?:京都|大阪)府)/,'$1').trim();
+      if(addr.length>5&&!allAddrs.includes(addr))allAddrs.push(addr);
+    }
+  }
+  if(allAddrs.length){
+    // Take the LAST (newest) address — override front address
+    data.address=allAddrs[allAddrs.length-1];
+    console.log('OCR back: newest address →',data.address);
+  }
+}
+
+// ===== POSTAL CODE LOOKUP =====
+// Common postal codes for major cities (offline fallback)
+const POSTAL_DB={'東京都千代田区':'100','東京都中央区':'103','東京都港区':'105','東京都新宿区':'160','東京都文京区':'112','東京都台東区':'110','東京都墨田区':'130','東京都江東区':'135','東京都品川区':'140','東京都目黒区':'152','東京都大田区':'143','東京都世田谷区':'154','東京都渋谷区':'150','東京都中野区':'164','東京都杉並区':'166','東京都豊島区':'170','東京都北区':'114','東京都荒川区':'116','東京都板橋区':'173','東京都練馬区':'176','東京都足立区':'120','東京都葛飾区':'124','東京都江戸川区':'132','大阪府大阪市':'530','愛知県名古屋市':'450','埼玉県川口市':'332','埼玉県さいたま市':'330','神奈川県横浜市':'220','千葉県千葉市':'260','北海道札幌市':'060','福岡県福岡市':'810','広島県広島市':'730','京都府京都市':'600','兵庫県神戸市':'650','静岡県浜松市':'430','群馬県前橋市':'371','茨城県水戸市':'310','栃木県宇都宮市':'320','長野県長野市':'380'};
+async function lookupPostalCode(address){
+  try{
+    // Extract prefecture+city+town
+    const m=address.match(/(東京都|北海道|(?:京都|大阪)府|.{2,3}県)\s*(.{1,10}?[市区町村郡])\s*(.{0,20}?[町丁目区])?/);
+    if(!m){console.log('Postal: no prefecture match in:',address);return;}
+    const pref=m[1],city=m[2]||'',town=m[3]||'';
+    console.log('Postal lookup:',pref,city,town);
+    // Strategy 1: postcodes.jp API (CORS-friendly, free)
+    try{
+      const q=encodeURIComponent(pref+city+town);
+      const resp=await fetch(`https://apis.postcode-jp.com/api/postcodes?general.japanese=${q}`,{signal:AbortSignal.timeout(5000)});
+      if(resp.ok){const json=await resp.json();if(json.length&&json[0].postcode){data.postcode=json[0].postcode.slice(0,3)+'-'+json[0].postcode.slice(3);console.log('Postal found (postcode-jp):',data.postcode);return;}}
+    }catch(e1){console.log('postcode-jp failed:',e1);}
+    // Strategy 2: GeoAPI Heartrails suggest
+    try{
+      const q2=pref+city;
+      const resp2=await fetch(`https://geoapi.heartrails.com/api/json?method=suggest&keyword=${encodeURIComponent(q2)}`,{signal:AbortSignal.timeout(5000)});
+      const json2=await resp2.json();
+      if(json2.response&&json2.response.location&&json2.response.location.length){
+        const loc=json2.response.location[0];
+        if(loc.postal){data.postcode=loc.postal;console.log('Postal found (heartrails):',data.postcode);return;}
+      }
+    }catch(e2){console.log('heartrails failed:',e2);}
+    // Strategy 3: zipcloud
+    try{
+      const q3=pref+city;
+      const resp3=await fetch(`https://zipcloud.ibsnet.co.jp/api/search?address=${encodeURIComponent(q3)}`,{signal:AbortSignal.timeout(5000)});
+      const json3=await resp3.json();
+      if(json3.results&&json3.results.length){
+        const zc=json3.results[0].zipcode;
+        data.postcode=zc.slice(0,3)+'-'+zc.slice(3);
+        console.log('Postal found (zipcloud):',data.postcode);return;
+      }
+    }catch(e3){console.log('zipcloud failed:',e3);}
+    // Strategy 4: Offline database fallback
+    const key=pref+city;
+    if(POSTAL_DB[key]){data.postcode=POSTAL_DB[key]+'-0000';console.log('Postal found (offline):',data.postcode);}
+    else{
+      // Try just prefecture + partial city
+      for(const[k,v]of Object.entries(POSTAL_DB)){if(key.startsWith(k.slice(0,5))||k.startsWith(key.slice(0,5))){data.postcode=v+'-0000';console.log('Postal found (offline partial):',data.postcode);break;}}
+    }
+  }catch(e){console.log('Postal code lookup failed:',e);}
+}
+
+// ===== CERTIFICATES (upload only, no OCR auto-fill) =====
+function onCert(key,inp){
+  const files=Array.from(inp.files);if(!files.length)return;
+  let loaded=0;
+  files.forEach(file=>{const r=new FileReader();r.onload=e=>{
+    certFiles[key].push({name:file.name,data:e.target.result});loaded++;
+    if(loaded===files.length) showStep();
+  };r.readAsDataURL(file);});
+}
+async function ocrCertificate(imgDataUrl,certKey){
+  try{
+    const el=showOcrStatus('🔍 '+(t('ocrReadingCert')||'Đang đọc chứng chỉ...'));
+    const text=await ocrImage(imgDataUrl);
+    console.log(`OCR cert [${certKey}]:`,text);
+    // Try to extract certificate name and date
+    let certName='',certDate='';
+    // Common certificate patterns (ordered by specificity)
+    const certPatterns=[
+      [/介護技能評価試験/,'介護技能評価試験'],
+      [/介護日本語評価試験/,'介護日本語評価試験'],
+      [/国際交流基金日本語基礎テスト|JFT[\s-]*Basic/i,'国際交流基金日本語基礎テスト'],
+      [/日本語能力試験|JLPT/i,'JLPT'],
+      [/特定技能.*?評価|技能評価試験/,'特定技能評価試験'],
+      [/介護福祉士/,'介護福祉士'],
+      [/介護職員初任者研修/,'介護職員初任者研修'],
+      [/実務者研修/,'実務者研修'],
+      [/建設機械施工/,'建設機械施工技士'],
+      [/溶接|welding/i,'溶接技能'],
+      [/電気工事士/,'電気工事士'],
+      [/食品衛生/,'食品衛生責任者'],
+      [/フォークリフト|forklift/i,'フォークリフト運転技能'],
+      [/玉掛/,'玉掛け技能'],
+      [/運転免許|driver.*?license/i,'運転免許'],
+      [/NAT[\s-]*TEST/i,'NAT-TEST'],
+      [/J[\s-]*TEST/i,'J-TEST'],
+    ];
+    for(const[pat,name] of certPatterns){
+      if(pat.test(text)){
+        certName=name;
+        // For JLPT, extract level
+        if(name==='JLPT'){const lvl=text.match(/N([1-5])/);certName='日本語能力試験'+(lvl?' N'+lvl[1]:'');}
+        // For NAT-TEST, extract level
+        if(name==='NAT-TEST'){const lvl=text.match(/(\d)級/);certName='NAT-TEST'+(lvl?' '+lvl[1]+'級':'');}
+        break;
+      }
+    }
+    // Extract date: Western calendar
+    let dateMatch=text.match(/(\d{4})\s*[年\/\.\-]\s*(\d{1,2})\s*[月\/\.\-]?\s*(\d{0,2})/);
+    if(dateMatch){const yr=parseInt(dateMatch[1]);if(yr>2015&&yr<2040)certDate=`${dateMatch[1]}/${dateMatch[2].padStart(2,'0')}`;}
+    // Extract date: Japanese era (令和)
+    if(!certDate){
+      const eraMatch=text.match(/令和\s*(\d{1,2})\s*年\s*(\d{1,2})\s*月/);
+      if(eraMatch){const yr=2018+parseInt(eraMatch[1]);certDate=`${yr}/${eraMatch[2].padStart(2,'0')}`;}
+      const eraMatch2=text.match(/平成\s*(\d{1,2})\s*年\s*(\d{1,2})\s*月/);
+      if(!certDate&&eraMatch2){const yr=1988+parseInt(eraMatch2[1]);certDate=`${yr}/${eraMatch2[2].padStart(2,'0')}`;}
+    }
+    // Check pass/fail
+    let result='';
+    if(/合格|passed|pass|PASS/i.test(text))result='合格';
+    else if(/判定.*?A|A.*?判定|A2以上/.test(text))result='判定　合格';
+    else if(/取得|修了|完了/.test(text))result='取得';
+    // Auto-add to licRows if we found something
+    if(certName){
+      const fullDetail=certName+(result?'　　　　　　　　　　　　　'+result:'');
+      // Check if already exists
+      const exists=licRows.some(r=>r.detail&&r.detail.includes(certName));
+      if(!exists){
+        // Add or fill empty row
+        const emptyRow=licRows.find(r=>!r.detail);
+        if(emptyRow){emptyRow.date=certDate;emptyRow.detail=fullDetail;}
+        else licRows.push({date:certDate,detail:fullDetail});
+      }
+      console.log('Cert auto-added:',certDate,fullDetail);
+    }
+    el.textContent='✅ '+(certName?certName+(result?' '+result:''):'Đọc xong');el.style.background='#2e7d32';
+    setTimeout(()=>{el.remove();showStep();},2500);
+  }catch(e){console.log('Cert OCR failed:',e);const el=document.getElementById('ocrStatus');if(el)el.remove();}
+}
+
+// ===== CERTS (multi-file per category) =====
+function buildCerts(){
+  const cats=[
+    {key:'certSenmon',icon:'📜'},{key:'certLicense',icon:'🚗'},
+    {key:'certJlpt',icon:'🇯🇵'},{key:'certTokutei',icon:'🏭'},{key:'certOther',icon:'📎'}
+  ];
+  let h=`<div class="q-subtitle">${t('cert_photos')}<br><small style="color:#667eea">${t('multiFile')}</small></div><div class="upload-grid">`;
+  cats.forEach(c=>{
+    const arr=certFiles[c.key]||[];
+    h+=`<div class="upload-card ${arr.length?'has-file':''}">
+      ${arr.length?arr.map(f=>f.data.startsWith('data:image/')?`<img src="${f.data}">`:`<span class="file-tag">📎 ${f.name}</span>`).join('')+`<div class="upload-status">${t(c.key)} (${arr.length})</div>`:`<div class="upload-icon">${c.icon}</div><div class="upload-label">${t(c.key)}</div>`}
+      <input type="file" id="cf_${c.key}" accept="image/*,.pdf,.doc,.docx" multiple style="display:none" onchange="onCert('${c.key}',this)">
+      <button class="upload-btn" onclick="event.stopPropagation();document.getElementById('cf_${c.key}').click()">${t('uploadClick')}</button>
+    </div>`;
+  });
+  h+='</div>';return h;
+}
+// onCert is defined above with OCR support
+
+// ===== DYNAMIC ROWS =====
+function buildEdu(){
+  let h=`<div class="hint-box">${t('eduNote1')}<br>${t('eduNote2')}<br>${t('eduNote3')}</div>`;
+  h+=`<div class="dynamic-section"><div class="row-labels"><span>${t('startDate')}</span><span>${t('endDate')}</span><span>${t('detail')}</span><span></span></div>`;
+  eduRows.forEach((r,i)=>{h+=`<div class="dynamic-row"><input type="text" placeholder="2021/07" value="${r.start}" onchange="eduRows[${i}].start=this.value"><input type="text" placeholder="2024/06" value="${r.end}" onchange="eduRows[${i}].end=this.value"><textarea placeholder="${t('eduHint')}" onchange="eduRows[${i}].detail=this.value">${r.detail}</textarea>${eduRows.length>1?`<button class="btn-remove-row" onclick="eduRows.splice(${i},1);showStep()">×</button>`:'<div></div>'}</div>`;});
+  h+=`</div><div class="btn-add-row" onclick="eduRows.push({start:'',end:'',detail:''});showStep()">${t('addRow')}</div>`;return h;
+}
+function buildWork(){
+  let h=`<div class="hint-box">${t('workNote1')}</div>`;
+  h+=`<div class="dynamic-section">`;
+  workRows.forEach((r,i)=>{
+    const isJP=r.country==='jp';
+    h+=`<div class="work-entry" style="border:1px solid #e0e0e0;border-radius:10px;padding:12px;margin-bottom:10px;background:#fafafa">
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;margin-bottom:6px">
+        <input type="text" class="q-input" style="padding:8px;font-size:13px" placeholder="2025/05" value="${r.start}" onchange="workRows[${i}].start=this.value">
+        <input type="text" class="q-input" style="padding:8px;font-size:13px" placeholder="${t('current')}" value="${r.end}" onchange="workRows[${i}].end=this.value">
+        ${workRows.length>1?`<button class="btn-remove-row" onclick="workRows.splice(${i},1);showStep()">×</button>`:'<div></div>'}
+      </div>
+      <div style="margin-bottom:6px">
+        <label style="font-size:11px;color:#667eea;font-weight:600">🌏 ${t('workCountry')}</label>
+        <select class="q-input" style="padding:8px;font-size:13px" onchange="workRows[${i}].country=this.value;showStep()">
+          <option value="home"${r.country==='home'?' selected':''}>${t('countryHome')}</option>
+          <option value="jp"${r.country==='jp'?' selected':''}>${t('countryJP')}</option>
+          <option value="other"${r.country==='other'?' selected':''}>${t('countryOther')}</option>
+        </select>
+      </div>
+      ${isJP?`<div style="margin-bottom:6px">
+        <label style="font-size:11px;color:#e65100;font-weight:600">🏷️ ${t('workVisa')}</label>
+        <input type="text" class="q-input" style="padding:8px;font-size:13px" placeholder="技能実習1号 / 特定技能1号..." value="${r.visa||''}" onchange="workRows[${i}].visa=this.value">
+      </div>`:''}
+      <textarea class="q-input" style="padding:8px;font-size:13px;min-height:50px" placeholder="${t('workHint')}" onchange="workRows[${i}].detail=this.value">${r.detail}</textarea>
+    </div>`;
+  });
+  h+=`</div><div class="btn-add-row" onclick="workRows.push({start:'',end:'',country:'home',visa:'',detail:''});showStep()">${t('addRow')}</div>`;return h;
+}
+function buildLic(){
+  let h=`<div class="dynamic-section"><div class="row-labels"><span>${t('startDate')}</span><span></span><span>${t('detail')}</span><span></span></div>`;
+  licRows.forEach((r,i)=>{h+=`<div class="dynamic-row"><input type="text" placeholder="2025/11" value="${r.date}" onchange="licRows[${i}].date=this.value"><div></div><textarea placeholder="${t('licHint')}" onchange="licRows[${i}].detail=this.value">${r.detail}</textarea>${licRows.length>1?`<button class="btn-remove-row" onclick="licRows.splice(${i},1);showStep()">×</button>`:'<div></div>'}</div>`;});
+  h+=`</div><div class="btn-add-row" onclick="licRows.push({date:'',detail:''});showStep()">${t('addRow')}</div>`;return h;
+}
+
+function saveCurrent(){const f=FIELDS[step];if(['photo','photo_zairyu','cert_upload'].includes(f.type)||f.type.startsWith('dynamic_'))return;const inp=document.getElementById('qInput');if(inp)data[f.key]=inp.value;}
+function saveDynamic(){
+  const f=FIELDS[step];
+  if(f.type==='dynamic_edu')document.querySelectorAll('.dynamic-row').forEach((row,i)=>{if(!eduRows[i])return;const ins=row.querySelectorAll('input');const ta=row.querySelector('textarea');if(ins[0])eduRows[i].start=ins[0].value;if(ins[1])eduRows[i].end=ins[1].value;if(ta)eduRows[i].detail=ta.value;});
+  else if(f.type==='dynamic_work')document.querySelectorAll('.work-entry').forEach((row,i)=>{if(!workRows[i])return;const ins=row.querySelectorAll('input[type="text"]');const sel=row.querySelector('select');const ta=row.querySelector('textarea');if(ins[0])workRows[i].start=ins[0].value;if(ins[1])workRows[i].end=ins[1].value;if(sel)workRows[i].country=sel.value;if(workRows[i].country==='jp'&&ins[2])workRows[i].visa=ins[2].value;if(ta)workRows[i].detail=ta.value;});
+  else if(f.type==='dynamic_license')document.querySelectorAll('.dynamic-row').forEach((row,i)=>{if(!licRows[i])return;const ins=row.querySelectorAll('input');const ta=row.querySelector('textarea');if(ins[0])licRows[i].date=ins[0].value;if(ta)licRows[i].detail=ta.value;});
+}
+function nextQuestion(){saveCurrent();saveDynamic();if(step<TOTAL-1){step++;showStep();}else showReview();}
+function prevQuestion(){saveCurrent();saveDynamic();if(step>0){step--;showStep();}}
+
+// =========================================================
+//  REVIEW
+// =========================================================
+function thumbs(arr){if(!arr||!arr.length)return'-';return arr.map(f=>f.data.startsWith('data:image/')?`<img src="${f.data}" class="review-thumb">`:`<span class="file-tag">📎 ${f.name}</span>`).join(' ');}
+function showReview(){
+  document.getElementById('questionArea').classList.add('hidden');
+  document.getElementById('navButtons').classList.add('hidden');
+  document.getElementById('progressSection').classList.add('hidden');
+  const ra=document.getElementById('reviewArea');ra.classList.remove('hidden');
+  let rows='';
+  FIELDS.forEach(f=>{
+    const lb=`${t(f.key)} (${f.jp})`;let v='';
+    if(f.type==='photo')v=photoData?`<img src="${photoData}" class="review-photo">`:'-';
+    else if(f.type==='photo_zairyu')v=thumbs(zairyuFront)+' '+thumbs(zairyuBack);
+    else if(f.type==='cert_upload'){v='';Object.keys(certFiles).forEach(k=>{if(certFiles[k].length)v+=`<b>${t(k)}:</b> `+thumbs(certFiles[k])+'<br>';});if(!v)v='-';}
+    else if(f.type==='dynamic_edu')v=eduRows.filter(r=>r.detail).map(r=>`${r.start} ~ ${r.end}　${r.detail}`).join('<br>')||'-';
+    else if(f.type==='dynamic_work')v=workRows.filter(r=>r.detail).map(r=>{const c=r.country==='jp'?'🇯🇵':'🌏';const visa=r.country==='jp'&&r.visa?` [${r.visa}]`:'';return`${r.start} ~ ${r.end}　${c} ${r.detail}${visa}`}).join('<br>')||'-';
+    else if(f.type==='dynamic_license')v=licRows.filter(r=>r.detail).map(r=>`${r.date}　${r.detail}`).join('<br>')||'-';
+    else v=data[f.key]||'-';
+    rows+=`<tr><th>${lb}</th><td>${v}</td></tr>`;
+  });
+  let ec=emails.map((e,i)=>`<div class="email-item"><input type="checkbox" id="em_${i}" value="${e}" checked><label for="em_${i}">${e}</label></div>`).join('');
+  ra.innerHTML=`<h2 style="color:#1a237e;margin-bottom:4px">${t('reviewT')}</h2><p style="color:#888;font-size:11px;margin-bottom:10px">${t('reviewD')}</p><div style="max-height:400px;overflow-y:auto"><table class="review-table">${rows}</table></div><h3 style="color:#1a237e;margin-top:18px;margin-bottom:6px">📧 ${t('emailT')}</h3><div class="email-list">${ec}</div><div class="final-actions"><button class="btn-action" style="background:#f0f0f0;color:#555" onclick="backToEdit()">← ${t('prev')}</button><button class="btn-action btn-download" onclick="doDownloadZip()">📥 ${t('download')}</button><button class="btn-action btn-email" onclick="doEmailZip()">📧 ${t('sendEmail')}</button></div>`;
+}
+function backToEdit(){document.getElementById('reviewArea').classList.add('hidden');document.getElementById('questionArea').classList.remove('hidden');document.getElementById('navButtons').classList.remove('hidden');document.getElementById('progressSection').classList.remove('hidden');step=TOTAL-1;showStep();}
+function getSelectedEmails(){return emails.filter((_,i)=>{const cb=document.getElementById(`em_${i}`);return cb&&cb.checked;});}
+
+// =========================================================
+//  LOADING
+// =========================================================
+function showLoading(m,s){document.getElementById('loadingText').textContent=m||t('generating');document.getElementById('loadingSub').textContent=s||t('pleaseWait');document.getElementById('loadingOverlay').classList.remove('hidden');}
+function hideLoading(){document.getElementById('loadingOverlay').classList.add('hidden');}
+
+// =========================================================
+//  AUTO-TRANSLATE TO JAPANESE
+// =========================================================
+// Dictionary of common terms used in 履歴書 (all languages → Japanese)
+const JP_DICT=(function(){
+  const d={};
+  function add(arr,jp){arr.forEach(w=>d[w.toLowerCase().trim()]=jp);}
+  // Current / Present
+  add(['hiện tại','hien tai','hiên tai','sekarang','បច្ចុប្បន្ន','हाल','Одоо','现在','လက်ရှိ','ปัจจุบัน','বর্তমান','present','current','now'],'現在');
+  // Countries
+  add(['việt nam','viet nam','vietnam'],'ベトナム');
+  add(['indonesia','indonésia'],'インドネシア');
+  add(['campuchia','cambodia','កម្ពុជា','kambodia'],'カンボジア');
+  add(['nepal','नेपाल','ネパール'],'ネパール');
+  add(['mongolia','mông cổ','Монгол'],'モンゴル');
+  add(['trung quốc','trung quoc','china','中国','tiongkok','cina'],'中国');
+  add(['myanmar','ミャンマー','miến điện','mien dien','ミャンマー'],'ミャンマー');
+  add(['thái lan','thai lan','thailand','タイ'],'タイ');
+  add(['bangladesh','バングラデシュ','বাংলাদেশ'],'バングラデシュ');
+  add(['philippines','philippin','フィリピン'],'フィリピン');
+  add(['nhật bản','nhat ban','japan','jepang','日本'],'日本');
+  // Gender
+  add(['nam','laki-laki','male','ប្រុស','पुरुष','Эрэгтэй','男','ကျား','ชาย','পুরুষ'],'男性');
+  add(['nữ','nu','perempuan','female','ស្រី','महिला','Эмэгтэй','女','မ','หญิง','মহিলা'],'女性');
+  // Yes/No
+  add(['có','co','ya','yes','មាន','छ','Тийм','有','ရှိ','มี','হ্যাঁ'],'有');
+  add(['không','khong','tidak','no','គ្មាន','छैन','Үгүй','无','မရှိ','ไม่มี','না'],'無');
+  // Common job/industry terms
+  add(['nông nghiệp','nong nghiep','pertanian','agriculture','farming'],'農業');
+  add(['xây dựng','xay dung','konstruksi','construction'],'建設');
+  add(['chế biến thực phẩm','che bien thuc pham','pengolahan makanan','food processing','food manufacturing'],'食品製造');
+  add(['điều dưỡng','dieu duong','perawatan','nursing','caregiving','care','介護'],'介護');
+  add(['đóng gói','dong goi','pengemasan','packaging','packing'],'梱包');
+  add(['kiểm tra','kiem tra','pemeriksaan','inspection'],'検品');
+  add(['hàn','han','las','welding'],'溶接');
+  add(['sơn','son','pengecatan','painting'],'塗装');
+  add(['cơ khí','co khi','permesinan','machining','mechanical'],'機械');
+  add(['may mặc','may mac','menjahit','sewing','garment'],'縫製');
+  add(['tự doanh','tu doanh','wiraswasta','self-employed'],'自営業');
+  add(['thất nghiệp','that nghiep','pengangguran','unemployed'],'無職');
+  add(['nội trợ','noi tro','ibu rumah tangga','housewife','homemaker'],'主婦');
+  add(['nhân viên','nhan vien','karyawan','employee','staff'],'社員');
+  add(['công nhân','cong nhan','pekerja','worker'],'作業員');
+  // Education
+  add(['trung học phổ thông','trung hoc pho thong','SMA','high school','senior high'],'高等学校');
+  add(['trung học cơ sở','trung hoc co so','SMP','junior high','middle school'],'中学校');
+  add(['đại học','dai hoc','universitas','university'],'大学');
+  add(['cao đẳng','cao dang','college','diploma'],'短期大学');
+  add(['trường dạy nghề','truong day nghe','sekolah kejuruan','vocational school'],'専門学校');
+  add(['trung tâm tiếng nhật','trung tam tieng nhat','pusat bahasa jepang','japanese language school'],'日本語学校');
+  add(['tốt nghiệp','tot nghiep','lulus','graduated','tamat'],'卒業');
+  add(['nhập học','nhap hoc','masuk','enrolled','入学'],'入学');
+  add(['tiếng nhật','tieng nhat','bahasa jepang','japanese language'],'日本語');
+  // Certificates
+  add(['hợp cách','hop cach','lulus','pass','passed','合格'],'合格');
+  add(['không hợp cách','khong hop cach','tidak lulus','failed','fail'],'不合格');
+  add(['bằng lái xe','bang lai xe','SIM','driver license','driving license'],'運転免許');
+  // Marital
+  add(['đã kết hôn','da ket hon','menikah','married'],'既婚');
+  add(['chưa kết hôn','chua ket hon','belum menikah','single','unmarried'],'未婚');
+  return d;
+})();
+
+// Lang code map for API
+const LANG_MAP={vi:'vi',id:'id',km:'km',ne:'ne',mn:'mn',zh:'zh-CN',my:'my',th:'th',bn:'bn'};
+
+// Translate text to Japanese: dictionary first, then free API fallback
+async function toJP(text){
+  if(!text||!text.trim())return text;
+  const trimmed=text.trim();
+  // Already Japanese (contains kanji/katakana/hiragana)?
+  if(/[\u3000-\u9FFF\uF900-\uFAFF]/.test(trimmed))return trimmed;
+  // Check dictionary (exact match, case insensitive)
+  const lower=trimmed.toLowerCase();
+  if(JP_DICT[lower])return JP_DICT[lower];
+  // Check if text contains dictionary words — replace them
+  let result=trimmed;
+  const sorted=Object.keys(JP_DICT).sort((a,b)=>b.length-a.length); // longest first
+  for(const key of sorted){
+    const re=new RegExp(key.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi');
+    result=result.replace(re,JP_DICT[key]);
+  }
+  if(result!==trimmed)return result;
+  // Try free MyMemory Translation API as fallback
+  try{
+    const lc=LANG_MAP[lang]||'vi';
+    const url=`https://api.mymemory.translated.net/get?q=${encodeURIComponent(trimmed)}&langpair=${lc}|ja`;
+    const resp=await fetch(url,{signal:AbortSignal.timeout(4000)});
+    const json=await resp.json();
+    if(json.responseStatus===200&&json.responseData&&json.responseData.translatedText){
+      const tr=json.responseData.translatedText;
+      if(tr&&tr!==trimmed&&!tr.includes('PLEASE SELECT'))return tr;
+    }
+  }catch(e){console.log('Translation API unavailable, using original text');}
+  return trimmed;
+}
+
+// Batch translate all form data for Word generation
+async function translateAllForWord(){
+  const td={...data};
+  // Translate key text fields
+  const textFields=['nationality','visa','address'];
+  for(const k of textFields){if(td[k])td[k]=await toJP(td[k]);}
+  // Translate gender/spouse/dependents
+  if(td.gender){const g=td.gender.toLowerCase();td.gender=JP_DICT[g]||td.gender;}
+  if(td.spouse){const s=td.spouse.toLowerCase();td.spouse=JP_DICT[s]||td.spouse;}
+  if(td.dependents){const d=td.dependents.toLowerCase();td.dependents=JP_DICT[d]||td.dependents;}
+  // Translate education rows
+  const tEdu=[];
+  for(const r of eduRows){tEdu.push({start:r.start,end:await toJP(r.end),detail:await toJP(r.detail)});}
+  // Translate work rows
+  const tWork=[];
+  for(const r of workRows){tWork.push({start:r.start,end:await toJP(r.end),country:r.country,visa:r.visa,detail:await toJP(r.detail)});}
+  // Translate license rows
+  const tLic=[];
+  for(const r of licRows){tLic.push({date:r.date,detail:await toJP(r.detail)});}
+  // Translate remarks
+  if(td.remarks)td.remarks=await toJP(td.remarks);
+  return{data:td,eduRows:tEdu,workRows:tWork,licRows:tLic};
+}
+
+// =========================================================
+//  WORD GENERATION
+// =========================================================
+async function generateWord(){
+  // Wait for libraries to load
+  if(window._libsReady) await window._libsReady;
+  if(typeof docx==='undefined') throw new Error('Word library not loaded. Please refresh the page and try again.');
+  const{Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,WidthType,AlignmentType,BorderStyle,ImageRun,VerticalAlign,HeightRule}=docx;
+  const bdr={style:BorderStyle.SINGLE,size:1,color:"000000"},noBdr={style:BorderStyle.NONE,size:0,color:"FFFFFF"};
+  const borders={top:bdr,bottom:bdr,left:bdr,right:bdr},noBorders={top:noBdr,bottom:noBdr,left:noBdr,right:noBdr};
+  // Match template: MS 明朝 font, total width 10490 DXA, A4 page
+  const F="ＭＳ 明朝",F2="Times New Roman",TW=10490;
+  // Column widths matching template: 6 grid columns (from XML tblGrid)
+  const W0=1843,W1=1701,W2=1973,W3=2421,W4=130,W5=2422;
+  // W0+W1+W2+W3+W4+W5 = 10490
+
+  function mkCell(text,w,o={}){
+    const lines=(text||'').split('\n');
+    const pars=lines.map(line=>new Paragraph({
+      alignment:o.center?AlignmentType.CENTER:o.right?AlignmentType.RIGHT:AlignmentType.LEFT,
+      spacing:{before:25,after:25},
+      children:[new TextRun({text:line,bold:!!o.bold,size:o.size||22,font:o.font||F,color:o.color||"000000"})]
+    }));
+    return new TableCell({
+      width:{size:w,type:WidthType.DXA},
+      borders:o.nb?noBorders:borders,
+      verticalAlign:o.vtop?VerticalAlign.TOP:VerticalAlign.CENTER,
+      margins:{top:25,bottom:25,left:80,right:80},
+      children:pars.length?pars:[new Paragraph({children:[]})],
+      columnSpan:o.cs,rowSpan:o.rs
+    });
+  }
+
+  const today=new Date(),yy=today.getFullYear(),mm=String(today.getMonth()+1).padStart(2,'0'),dd=String(today.getDate()).padStart(2,'0');
+  let photoBlob=null;
+  if(photoData){try{const r=await fetch(photoData);photoBlob=await r.arrayBuffer();}catch(e){}}
+
+  // Auto-translate all text to Japanese
+  const tr=await translateAllForWord();
+  const D=tr.data, tEduRows=tr.eduRows, tWorkRows=tr.workRows, tLicRows=tr.licRows;
+
+  const DC=[];
+
+  // ============================================================
+  //  TABLE 0: Main info (17 rows x 6 cols) — matching template
+  // ============================================================
+  const t0rows=[];
+
+  // Row 0: 履歴書 title + date (col0-1 merged=span2, col2-5 merged=span4 but template shows span2+span2)
+  t0rows.push(new TableRow({height:{value:450,rule:HeightRule.AT_LEAST},children:[
+    mkCell("履　歴　書",W0+W1,{cs:2,bold:true,size:40,font:F}),
+    mkCell(`${yy}年　${mm}月　${dd}日現在`,W2+W3+W4+W5,{cs:4,right:true,size:22})
+  ]}));
+
+  // Row 1: ふりがな + name reading + PHOTO (rowSpan 2)
+  const photoW=W4+W5; // right side for photo
+  const nameW=W1+W2+W3; // middle cols for name
+  t0rows.push(new TableRow({height:{value:194,rule:HeightRule.AT_LEAST},children:[
+    mkCell("ふりがな",W0,{size:22}),
+    mkCell(D.furigana||'',nameW,{cs:3,size:22}),
+    photoBlob?new TableCell({width:{size:photoW,type:WidthType.DXA},borders,verticalAlign:VerticalAlign.CENTER,rowSpan:2,columnSpan:2,children:[
+      new Paragraph({alignment:AlignmentType.CENTER,children:[new ImageRun({data:photoBlob,transformation:{width:113,height:151},type:'png'})]})
+    ]}):mkCell("写真\n(3×4cm)",photoW,{cs:2,rs:2,center:true,size:16,color:"999999"})
+  ]}));
+
+  // Row 2: 氏名 + full name (photo continues via rowSpan)
+  t0rows.push(new TableRow({height:{value:491,rule:HeightRule.AT_LEAST},children:[
+    mkCell("氏　名",W0,{bold:true,size:22}),
+    mkCell(D.fullname||'',nameW,{cs:3,size:32,bold:true,font:F2})
+  ]}));
+
+  // Row 3: 生年月日 (span 3~5 cols) + 性別
+  const dobStr=D.dob?(()=>{const d=new Date(D.dob);const age=yy-d.getFullYear();return`${d.getFullYear()}年　${String(d.getMonth()+1).padStart(2,'0')}月　${String(d.getDate()).padStart(2,'0')}日生 （満${age}歳）`;})():'';
+  const genderRaw=(D.gender||'');
+  const genderJp=JP_DICT[genderRaw.toLowerCase()]||(/男/.test(genderRaw)?'男性':/女/.test(genderRaw)?'女性':genderRaw);
+  t0rows.push(new TableRow({height:{value:324,rule:HeightRule.AT_LEAST},children:[
+    mkCell(dobStr,W0+W1+W2+W3+W4,{cs:5,size:22}),
+    mkCell(`性別　${genderJp}`,W5,{size:22,center:true})
+  ]}));
+
+  // Row 4: 現住所 label with postcode (span all 6)
+  t0rows.push(new TableRow({height:{value:216,rule:HeightRule.AT_LEAST},children:[
+    mkCell(`現住所（〒${D.postcode||'　　　-　　　'}）`,TW,{cs:6,size:22})
+  ]}));
+
+  // Row 5: Address detail (span all 6)
+  t0rows.push(new TableRow({height:{value:364,rule:HeightRule.AT_LEAST},children:[
+    mkCell(D.address||'',TW,{cs:6,size:22})
+  ]}));
+
+  // Row 6: 在留資格 + 期限（同じ行にカッコで付記）(span all 6)
+  const veStr=D.visa_exp?(()=>{const d=new Date(D.visa_exp);return`${d.getFullYear()}年${String(d.getMonth()+1).padStart(2,'0')}月${String(d.getDate()).padStart(2,'0')}日`;})():'';
+  const visaLine=D.visa?(D.visa+(veStr?`（${veStr}まで）`:'')):'';
+  t0rows.push(new TableRow({height:{value:358,rule:HeightRule.AT_LEAST},children:[
+    mkCell(`在留資格　　${visaLine}`,TW,{cs:6,size:22})
+  ]}));
+
+  // Row 7: 国籍 | value | 配偶者 (span3) | 扶養者 (有/無 only, no numbers)
+  const spRaw=(D.spouse||'').toLowerCase();
+  const sv2=spRaw.includes('有')||spRaw.includes('có')||spRaw.includes('ya')||spRaw.includes('yes')?'有':'無';
+  const dpRaw=(D.dependents||'').toLowerCase();
+  const dv2=dpRaw.includes('有')||dpRaw.includes('có')||dpRaw.includes('ya')||dpRaw.includes('yes')?'有':'無';
+  t0rows.push(new TableRow({height:{value:389,rule:HeightRule.AT_LEAST},children:[
+    mkCell("国籍",W0,{size:22}),
+    mkCell(D.nationality||'',W1,{size:22}),
+    mkCell(`配偶者:　${sv2}`,W2+W3+W4,{cs:3,size:22}),
+    mkCell(`扶養者:　${dv2}`,W5,{size:22})
+  ]}));
+
+  // Row 8: Empty separator (span all 6)
+  t0rows.push(new TableRow({height:{value:180,rule:HeightRule.AT_LEAST},children:[
+    mkCell("",TW,{cs:6,size:8})
+  ]}));
+
+  // Row 9: Header — 開始年月 | 終了年月 | 学歴・職歴
+  t0rows.push(new TableRow({height:{value:276,rule:HeightRule.AT_LEAST},children:[
+    mkCell("開始年月",W0,{bold:true,size:22,center:true}),
+    mkCell("終了年月",W1,{bold:true,size:22,center:true}),
+    mkCell("学　歴 ・ 職　歴（各別にまとめて書く）",W2+W3+W4+W5,{cs:4,bold:true,size:22,center:true})
+  ]}));
+
+  // Row 10: 学歴 label
+  t0rows.push(new TableRow({height:{value:271,rule:HeightRule.AT_LEAST},children:[
+    mkCell("",W0),mkCell("",W1),
+    mkCell("学歴",W2+W3+W4+W5,{cs:4,center:true,bold:true,size:22})
+  ]}));
+
+  // Education rows (translated)
+  tEduRows.filter(r=>r.detail).forEach(r=>{
+    t0rows.push(new TableRow({height:{value:417,rule:HeightRule.AT_LEAST},children:[
+      mkCell(r.start?r.start.replace('/','年')+'月':'',W0,{center:true,size:22}),
+      mkCell(r.end?r.end.replace('/','年')+'月':'',W1,{center:true,size:22}),
+      mkCell(r.detail,W2+W3+W4+W5,{cs:4,size:22})
+    ]}));
+  });
+
+  // 以上 for education
+  t0rows.push(new TableRow({height:{value:364,rule:HeightRule.AT_LEAST},children:[
+    mkCell("",W0),mkCell("",W1),
+    mkCell("以上",W2+W3+W4+W5,{cs:4,right:true,size:22})
+  ]}));
+
+  // 職歴 label
+  t0rows.push(new TableRow({height:{value:229,rule:HeightRule.AT_LEAST},children:[
+    mkCell("",W0),mkCell("",W1),
+    mkCell("職歴",W2+W3+W4+W5,{cs:4,center:true,bold:true,size:22})
+  ]}));
+
+  // Work rows — translated, include country prefix and visa
+  tWorkRows.filter(r=>r.detail).forEach(r=>{
+    const endVal=r.end==='現在'?'現在':r.end?r.end.replace('/','年')+'月':'';
+    const countryPrefix=r.country==='jp'?'（日本）':r.country==='other'?'':'（'+(D.nationality||'')+'）';
+    const visaSuffix=r.country==='jp'&&r.visa?'（'+r.visa+'）':'';
+    const workText=countryPrefix+r.detail+(visaSuffix?'\n'+visaSuffix:'');
+    t0rows.push(new TableRow({height:{value:645,rule:HeightRule.AT_LEAST},children:[
+      mkCell(r.start?r.start.replace('/','年')+'月':'',W0,{center:true,size:22}),
+      mkCell(endVal,W1,{center:true,size:22}),
+      mkCell(workText,W2+W3+W4+W5,{cs:4,size:22})
+    ]}));
+  });
+
+  // 以上 for work
+  t0rows.push(new TableRow({height:{value:401,rule:HeightRule.AT_LEAST},children:[
+    mkCell("",W0),mkCell("",W1),
+    mkCell("以上",W2+W3+W4+W5,{cs:4,right:true,size:22})
+  ]}));
+
+  DC.push(new Table({rows:t0rows,width:{size:TW,type:WidthType.DXA}}));
+  DC.push(new Paragraph({spacing:{after:60},children:[]}));
+
+  // ============================================================
+  //  TABLE 1: 免許・資格 (matching template: col0=1843, col1=8647)
+  // ============================================================
+  const LW0=1843,LW1=8647,lR=[];
+
+  lR.push(new TableRow({height:{value:250,rule:HeightRule.AT_LEAST},children:[
+    mkCell("年",LW0,{bold:true,size:22,center:true}),
+    mkCell("免　許 ・ 資　格",LW1,{bold:true,size:22,center:true})
+  ]}));
+
+  tLicRows.filter(r=>r.detail).forEach(r=>{
+    let dt=r.detail||'';
+    if(!/合格|不合格|判定|取得|修了/.test(dt)&&dt) dt+='　　　　　　　　　　　　　合格';
+    lR.push(new TableRow({height:{value:458,rule:HeightRule.AT_LEAST},children:[
+      mkCell(r.date?r.date.replace('/','年')+'月':'',LW0,{center:true,size:22}),
+      mkCell(dt,LW1,{size:22})
+    ]}));
+  });
+
+  lR.push(new TableRow({height:{value:424,rule:HeightRule.AT_LEAST},children:[
+    mkCell("",LW0),mkCell("　以上",LW1,{right:true,size:22})
+  ]}));
+
+  // Empty bottom row like template
+  lR.push(new TableRow({height:{value:226,rule:HeightRule.AT_LEAST},children:[
+    mkCell("",LW0),mkCell("",LW1)
+  ]}));
+
+  DC.push(new Table({rows:lR,width:{size:TW,type:WidthType.DXA}}));
+  DC.push(new Paragraph({spacing:{after:40},children:[]}));
+
+  // ============================================================
+  //  TABLE 2: 備考 (matching template: col0=1838, col1=8647)
+  // ============================================================
+  DC.push(new Table({rows:[new TableRow({height:{value:665,rule:HeightRule.AT_LEAST},children:[
+    mkCell("備考",1838,{bold:true,size:22,vtop:true}),
+    mkCell(D.remarks||'',8652,{size:22,vtop:true})
+  ]})],width:{size:TW,type:WidthType.DXA}}));
+
+  return await Packer.toBlob(new Document({sections:[{properties:{page:{size:{width:11906,height:16838},margin:{top:600,right:700,bottom:600,left:700}}},children:DC}]}));
+}
+
+// =========================================================
+//  ZIP + ACTIONS
+// =========================================================
+function d2b(dataUrl){const p=dataUrl.split(',');const m=p[0].match(/:(.*?);/)[1];const b=atob(p[1]);const a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return new Blob([a],{type:m});}
+function gExt(name){const e=name.split('.').pop().toLowerCase();return['jpg','jpeg','png','gif','webp','pdf','doc','docx'].includes(e)?e:'bin';}
+
+async function createZip(){
+  const zip=new JSZip(),nm=(data.fullname||'profile').replace(/\s+/g,'_'),ds=new Date().toISOString().slice(0,10);
+  const wordBlob=await generateWord();
+  zip.file(`履歴書_${nm}_${ds}.docx`,wordBlob);
+  const folder=zip.folder(`写真_${nm}`);
+  if(photoData)folder.file(`証明写真_3x4.jpg`,d2b(photoData));
+  zairyuFront.forEach((f,i)=>folder.file(`在留カード_表_${i+1}.${gExt(f.name)}`,d2b(f.data)));
+  zairyuBack.forEach((f,i)=>folder.file(`在留カード_裏_${i+1}.${gExt(f.name)}`,d2b(f.data)));
+  const certNames={certSenmon:'専門級',certLicense:'運転免許',certJlpt:'日本語_JLPT',certTokutei:'特定技能',certOther:'その他'};
+  Object.entries(certFiles).forEach(([k,arr])=>{arr.forEach((f,i)=>folder.file(`${certNames[k]||k}_${i+1}.${gExt(f.name)}`,d2b(f.data)));});
+  return await zip.generateAsync({type:'blob'});
+}
+
+function mobileSave(blob,fname){
+  try{
+    // Try saveAs first
+    if(typeof saveAs==='function'){saveAs(blob,fname);return;}
+  }catch(e){}
+  // Fallback: create download link (works on iOS/Android)
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=fname;
+  document.body.appendChild(a);a.click();
+  setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},1000);
+}
+async function doDownloadZip(){
+  showLoading();
+  try{const z=await createZip();const nm=(data.fullname||'profile').replace(/\s+/g,'_');mobileSave(z,`履歴書_${nm}_${new Date().toISOString().slice(0,10)}.zip`);hideLoading();showSuccess();}
+  catch(e){hideLoading();alert('Error: '+e.message);console.error(e);}
+}
+// ★★★ QUAN TRỌNG: Dán URL Google Apps Script vào đây ★★★
+// Xem file "email-server-script.gs" để biết cách tạo URL
+const APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbzzU0w3VPyVZ09lnEgPwgSEB0kwFV-HpXxsa5rA5RAx1BUSP-uMb4ZzJJHMVpL5ioE2Nw/exec';
+
+async function doEmailZip(){
+  const sel=getSelectedEmails();if(!sel.length){alert('Please select email!');return;}
+
+  if(!APPS_SCRIPT_URL){
+    alert('⚠️ Chưa cấu hình email server!\nFile ZIP sẽ được tải về máy.');
+    showLoading();
+    try{
+      const z=await createZip();const nm=(data.fullname||'profile').replace(/\s+/g,'_');
+      mobileSave(z,`履歴書_${nm}_${new Date().toISOString().slice(0,10)}.zip`);
+      hideLoading();showSuccess();
+    }catch(e){hideLoading();alert('Error: '+e.message);}
+    return;
+  }
+
+  showLoading(t('sendingEmail')||'Đang gửi email...','📧');
+  try{
+    // Create ZIP once, generate base64 only (saves memory on mobile)
+    const zip=new JSZip(),nm=(data.fullname||'profile').replace(/\s+/g,'_'),ds=new Date().toISOString().slice(0,10);
+    const wordBlob=await generateWord();
+    zip.file(`履歴書_${nm}_${ds}.docx`,wordBlob);
+    const folder=zip.folder(`写真_${nm}`);
+    if(photoData)folder.file(`証明写真_3x4.jpg`,d2b(photoData));
+    zairyuFront.forEach((f,i)=>folder.file(`在留カード_表_${i+1}.${gExt(f.name)}`,d2b(f.data)));
+    zairyuBack.forEach((f,i)=>folder.file(`在留カード_裏_${i+1}.${gExt(f.name)}`,d2b(f.data)));
+    const certNames={certSenmon:'専門級',certLicense:'運転免許',certJlpt:'日本語_JLPT',certTokutei:'特定技能',certOther:'その他'};
+    Object.entries(certFiles).forEach(([k,arr])=>{arr.forEach((f,i)=>folder.file(`${certNames[k]||k}_${i+1}.${gExt(f.name)}`,d2b(f.data)));});
+
+    const fname=`履歴書_${nm}_${ds}.zip`;
+
+    // Generate base64 for email (single generation to save memory)
+    const zipBase64=await zip.generateAsync({type:'base64'});
+
+    // Send via Google Apps Script (no-cors mode for mobile compatibility)
+    let emailSent=false;
+    try{
+      const resp=await fetch(APPS_SCRIPT_URL,{
+        method:'POST',
+        headers:{'Content-Type':'text/plain'},
+        redirect:'follow',
+        body:JSON.stringify({
+          emails:sel,
+          fullname:data.fullname||'',
+          furigana:data.furigana||'',
+          nationality:data.nationality||'',
+          visa:data.visa||'',
+          phone:data.phone||'',
+          email:data.email||'',
+          zipBase64:zipBase64,
+          fileName:fname
+        })
+      });
+      let result;
+      try{result=await resp.json();}catch(e){result={success:resp.ok};}
+      emailSent=result.success;
+      if(!emailSent)console.error('Apps Script error:',result);
+    }catch(fetchErr){
+      console.error('Fetch error:',fetchErr);
+      // Try no-cors as fallback (can't read response but request may succeed)
+      try{
+        await fetch(APPS_SCRIPT_URL,{
+          method:'POST',
+          mode:'no-cors',
+          headers:{'Content-Type':'text/plain'},
+          body:JSON.stringify({
+            emails:sel,
+            fullname:data.fullname||'',
+            furigana:data.furigana||'',
+            nationality:data.nationality||'',
+            visa:data.visa||'',
+            phone:data.phone||'',
+            email:data.email||'',
+            zipBase64:zipBase64,
+            fileName:fname
+          })
+        });
+        emailSent=true;// Assume success in no-cors mode
+      }catch(e2){console.error('no-cors also failed:',e2);}
+    }
+
+    // Save locally as backup (convert base64 back to blob for download)
+    try{
+      const raw=atob(zipBase64);const arr=new Uint8Array(raw.length);
+      for(let i=0;i<raw.length;i++)arr[i]=raw.charCodeAt(i);
+      mobileSave(new Blob([arr],{type:'application/zip'}),fname);
+    }catch(dlErr){console.error('Download error:',dlErr);}
+
+    hideLoading();
+    if(emailSent){
+      alert(`✅ Email đã gửi thành công!\n\n📧 Đã gửi đến:\n${sel.join('\n')}\n\n📎 File ${fname} cũng đã tải về máy.`);
+    }else{
+      alert(`⚠️ Gửi email có thể thất bại.\n\n📎 File ZIP đã tải về máy.\nVui lòng kiểm tra email.`);
+    }
+    showSuccess();
+  }catch(e){
+    hideLoading();
+    console.error('Email error:',e);
+    try{
+      const z=await createZip();const nm2=(data.fullname||'profile').replace(/\s+/g,'_');
+      mobileSave(z,`履歴書_${nm2}_${new Date().toISOString().slice(0,10)}.zip`);
+    }catch(e2){}
+    alert(`⚠️ Không gửi được email (${e.message}).\n\n📎 File ZIP đã tải về máy.`);
+    showSuccess();
+  }
+}
+function showSuccess(){document.getElementById('reviewArea').classList.add('hidden');document.getElementById('successArea').classList.remove('hidden');}
+function restart(){data={};photoData=null;ocrDone=false;zairyuFront=[];zairyuBack=[];certFiles={certSenmon:[],certLicense:[],certJlpt:[],certTokutei:[],certOther:[]};eduRows=[{start:'',end:'',detail:''}];workRows=[{start:'',end:'',country:'home',visa:'',detail:''}];licRows=[{date:'',detail:''}];step=0;document.getElementById('successArea').classList.add('hidden');document.getElementById('welcomeScreen').classList.remove('hidden');document.getElementById('langSection').classList.remove('hidden');document.getElementById('progressSection').classList.add('hidden');document.getElementById('navButtons').classList.add('hidden');updateUI();}
+</script>
+</body>
+</html>
