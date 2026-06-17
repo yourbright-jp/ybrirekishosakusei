@@ -414,7 +414,25 @@ function buildPhotoUpload(){
     <button class="upload-btn" onclick="document.getElementById('pf_main').click()">📷 ${t('uploadPhoto')}</button></div>
   </div>`;
 }
-function onMainPhoto(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{photoData=e.target.result;showStep();};r.readAsDataURL(f);}
+// ===== IMAGE COMPRESSION (for mobile) =====
+function compressImage(dataUrl,maxW,maxH,quality){
+  return new Promise(resolve=>{
+    if(!dataUrl.startsWith('data:image/')){resolve(dataUrl);return;}
+    const img=new Image();img.onload=()=>{
+      let w=img.width,h=img.height;
+      if(w<=maxW&&h<=maxH){resolve(dataUrl);return;}
+      const ratio=Math.min(maxW/w,maxH/h);
+      w=Math.round(w*ratio);h=Math.round(h*ratio);
+      const c=document.createElement('canvas');c.width=w;c.height=h;
+      const ctx=c.getContext('2d');ctx.drawImage(img,0,0,w,h);
+      resolve(c.toDataURL('image/jpeg',quality));
+    };img.onerror=()=>resolve(dataUrl);img.src=dataUrl;
+  });
+}
+async function compressFile(dataUrl){return compressImage(dataUrl,1200,1200,0.75);}
+async function compressPhoto(dataUrl){return compressImage(dataUrl,600,800,0.85);}
+
+async function onMainPhoto(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=async e=>{photoData=await compressPhoto(e.target.result);showStep();};r.readAsDataURL(f);}
 
 // ===== ZAIRYU =====
 function buildZairyu(){
@@ -436,12 +454,12 @@ function buildZairyu(){
 function onZairyu(side,inp){
   const files=Array.from(inp.files);if(!files.length)return;
   let loaded=0;const target=side==='front'?zairyuFront:zairyuBack;
-  files.forEach(file=>{const r=new FileReader();r.onload=e=>{
-    target.push({name:file.name,data:e.target.result});loaded++;
+  files.forEach(file=>{const r=new FileReader();r.onload=async e=>{
+    const compressed=await compressFile(e.target.result);
+    target.push({name:file.name,data:compressed});loaded++;
     if(loaded===files.length){
       showStep();
-      // Auto-OCR both sides of 在留カード
-      if(file.type.startsWith('image/'))runOCR(e.target.result,side);
+      if(file.type.startsWith('image/'))runOCR(compressed,side);
     }
   };r.readAsDataURL(file);});
 }
@@ -733,8 +751,9 @@ async function lookupPostalCode(address){
 function onCert(key,inp){
   const files=Array.from(inp.files);if(!files.length)return;
   let loaded=0;
-  files.forEach(file=>{const r=new FileReader();r.onload=e=>{
-    certFiles[key].push({name:file.name,data:e.target.result});loaded++;
+  files.forEach(file=>{const r=new FileReader();r.onload=async e=>{
+    const compressed=await compressFile(e.target.result);
+    certFiles[key].push({name:file.name,data:compressed});loaded++;
     if(loaded===files.length) showStep();
   };r.readAsDataURL(file);});
 }
@@ -1314,9 +1333,22 @@ async function doEmailZip(){
     const fname=`履歴書_${nm}_${ds}.zip`;
 
     // Generate base64 for email (single generation to save memory)
-    const zipBase64=await zip.generateAsync({type:'base64'});
+    const zipBase64=await zip.generateAsync({type:'base64',compression:'DEFLATE',compressionOptions:{level:6}});
+    const sizeMB=(zipBase64.length*0.75/1024/1024).toFixed(1);
+    console.log('ZIP size:',sizeMB,'MB');
 
-    // Send via Google Apps Script (no-cors mode for mobile compatibility)
+    // Check if too large for email (Gmail limit ~25MB)
+    if(parseFloat(sizeMB)>20){
+      // Save locally instead
+      const raw=atob(zipBase64);const arr=new Uint8Array(raw.length);
+      for(let i=0;i<raw.length;i++)arr[i]=raw.charCodeAt(i);
+      mobileSave(new Blob([arr],{type:'application/zip'}),fname);
+      hideLoading();
+      alert(`⚠️ File quá lớn (${sizeMB}MB) để gửi email.\n\n📎 File ZIP đã tải về máy.\nVui lòng gửi thủ công qua email.`);
+      showSuccess();return;
+    }
+
+    // Send via Google Apps Script
     let emailSent=false;
     try{
       const resp=await fetch(APPS_SCRIPT_URL,{
