@@ -997,7 +997,7 @@ const JP_DICT=(function(){
 // Lang code map for API
 const LANG_MAP={vi:'vi',id:'id',km:'km',ne:'ne',mn:'mn',zh:'zh-CN',my:'my',th:'th',bn:'bn',ja:'ja',en:'en',si:'si'};
 
-// Translate text to Japanese: dictionary first, then free API fallback
+// Translate text to Japanese: dictionary for short words, Google Translate for sentences
 async function toJP(text){
   if(!text||!text.trim())return text;
   const trimmed=text.trim();
@@ -1006,15 +1006,17 @@ async function toJP(text){
   // Check dictionary (exact match, case insensitive)
   const lower=trimmed.toLowerCase();
   if(JP_DICT[lower])return JP_DICT[lower];
-  // Check if text contains dictionary words — replace them
-  let result=trimmed;
-  const sorted=Object.keys(JP_DICT).sort((a,b)=>b.length-a.length); // longest first
-  for(const key of sorted){
-    const re=new RegExp(key.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi');
-    result=result.replace(re,JP_DICT[key]);
+  // Short text only: try dictionary partial replacement
+  if(trimmed.length<15){
+    let result=trimmed;
+    const sorted=Object.keys(JP_DICT).sort((a,b)=>b.length-a.length);
+    for(const key of sorted){
+      const re=new RegExp(key.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi');
+      result=result.replace(re,JP_DICT[key]);
+    }
+    if(result!==trimmed)return result;
   }
-  if(result!==trimmed)return result;
-  // Try Google Translate via Apps Script (high quality)
+  // Long text or no dictionary match → Google Translate via Apps Script
   if(APPS_SCRIPT_URL){
     try{
       const lc=LANG_MAP[lang]||'vi';
