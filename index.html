@@ -995,7 +995,7 @@ const JP_DICT=(function(){
 })();
 
 // Lang code map for API
-const LANG_MAP={vi:'vi',id:'id',km:'km',ne:'ne',mn:'mn',zh:'zh-CN',my:'my',th:'th',bn:'bn'};
+const LANG_MAP={vi:'vi',id:'id',km:'km',ne:'ne',mn:'mn',zh:'zh-CN',my:'my',th:'th',bn:'bn',ja:'ja',en:'en',si:'si'};
 
 // Translate text to Japanese: dictionary first, then free API fallback
 async function toJP(text){
@@ -1014,7 +1014,24 @@ async function toJP(text){
     result=result.replace(re,JP_DICT[key]);
   }
   if(result!==trimmed)return result;
-  // Try free MyMemory Translation API as fallback
+  // Try Google Translate via Apps Script (high quality)
+  if(APPS_SCRIPT_URL){
+    try{
+      const lc=LANG_MAP[lang]||'vi';
+      const resp=await fetch(APPS_SCRIPT_URL,{
+        method:'POST',
+        headers:{'Content-Type':'text/plain'},
+        redirect:'follow',
+        body:JSON.stringify({action:'translate',text:trimmed,sourceLang:lc,targetLang:'ja'})
+      });
+      const json=await resp.json();
+      if(json.success&&json.translatedText){
+        const tr=json.translatedText;
+        if(tr&&tr!==trimmed)return tr;
+      }
+    }catch(e){console.log('Apps Script translation failed, trying MyMemory...');}
+  }
+  // Fallback: free MyMemory Translation API
   try{
     const lc=LANG_MAP[lang]||'vi';
     const url=`https://api.mymemory.translated.net/get?q=${encodeURIComponent(trimmed)}&langpair=${lc}|ja`;
@@ -1024,7 +1041,7 @@ async function toJP(text){
       const tr=json.responseData.translatedText;
       if(tr&&tr!==trimmed&&!tr.includes('PLEASE SELECT'))return tr;
     }
-  }catch(e){console.log('Translation API unavailable, using original text');}
+  }catch(e){console.log('MyMemory also failed, using original text');}
   return trimmed;
 }
 
