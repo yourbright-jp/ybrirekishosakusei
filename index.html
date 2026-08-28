@@ -161,6 +161,7 @@ select.q-input{cursor:pointer;appearance:auto}
     <label>🌐 Chọn ngôn ngữ / Select Language / 言語を選択:</label>
     <div class="lang-grid">
       <button class="lang-btn active" onclick="setLang('vi',this)">🇻🇳 Tiếng Việt</button>
+      <button class="lang-btn" onclick="setLang('ja',this)">🇯🇵 日本語</button>
       <button class="lang-btn" onclick="setLang('id',this)">🇮🇩 Indonesia</button>
       <button class="lang-btn" onclick="setLang('km',this)">🇰🇭 ខ្មែរ</button>
       <button class="lang-btn" onclick="setLang('ne',this)">🇳🇵 नेपाली</button>
@@ -169,6 +170,7 @@ select.q-input{cursor:pointer;appearance:auto}
       <button class="lang-btn" onclick="setLang('my',this)">🇲🇲 မြန်မာ</button>
       <button class="lang-btn" onclick="setLang('th',this)">🇹🇭 ไทย</button>
       <button class="lang-btn" onclick="setLang('bn',this)">🇧🇩 বাংলা</button>
+      <button class="lang-btn" onclick="setLang('si',this)">🇱🇰 සිංහල</button>
     </div>
   </div>
   <div class="progress-bar hidden" id="progressSection">
@@ -288,6 +290,48 @@ vi:{
   weNight:"Có làm ca đêm (夜勤)",weNightCount:"Số lần/tháng",weNightStaff:"Số nhân viên/ca đêm",weNightUsers:"Số người sử dụng phụ trách",
   weRecord:"Cách ghi chép báo cáo (記録報告)",recHand:"Viết tay",recPC:"Máy tính",recTablet:"Máy tính bảng",
 },
+ja:{
+  welcome:"ようこそ！",welcomeDesc:"質問に順番に答えて履歴書を作成しましょう。",
+  start:"開始",prev:"← 戻る",next:"次へ →",submit:"確認 ✓",
+  download:"ZIPダウンロード（Word＋写真）",sendEmail:"メールで送信",restart:"やり直す",
+  successT:"完成！",successD:"履歴書が作成されました。",
+  reviewT:"内容の確認",reviewD:"送信前にご確認ください：",emailT:"送信先メールを選択：",qLabel:"質問",
+  male:"男性",female:"女性",other:"その他",yes:"有",no:"無",
+  addRow:"+ 行を追加",startDate:"開始",endDate:"終了",detail:"内容",uploadPhoto:"写真をアップロード",
+  furigana:"フリガナ",fullname:"氏名（ローマ字・大文字）",fullnameHint:"⚠️ 英語の大文字で記入してください\n(例: NGUYEN THI HONG)",dob:"生年月日",
+  gender:"性別",photo:"証明写真 (3×4)",postcode:"郵便番号 (〒)",
+  address:"現住所",phone:"電話番号",email:"メールアドレス",
+  visa:"在留資格",visa_exp:"在留期限",nationality:"国籍",spouse:"配偶者",
+  dependents:"扶養者",education:"学歴",work:"職歴",license:"免許・資格",
+  zairyu:"在留カード（写真）",cert_photos:"証明書のアップロード",
+  eduHint:"学校名・学部を記入",
+  eduNote1:"<b>⚠️</b> 母国での<b>最終学歴</b>を記入してください。",
+  eduNote2:"日本で通った学校は<b>すべて</b>記入してください。",
+  eduNote3:"母国の<b>日本語センター・養成学校</b>もここに記入してください。",
+  eduNote4:"<b>⚠️ 大学・短大・専門学校卒業の場合は学部・専攻を必ず記入してください。</b>",
+  eduCountry:"学校の所在国",eduMajor:"学部・専攻（大学・短大・専門学校は必須）",
+  workHint:"企業名＋職種",workNote1:"<b>⚠️</b> 卒業から来日まで<b>空白期間がないように</b>記入してください。",
+  workCompany:"企業名",workJob:"仕事内容",
+  licHint:"免許・資格名と結果",current:"現在",pass:"合格",
+  certSenmon:"専門級",certLicense:"運転免許",certJlpt:"日本語証明書（JLPT/NAT等）",certTokutei:"特定技能証明書",certOther:"その他の証明書",
+  uploadClick:"ファイルを選択（画像・PDF）",uploaded:"アップロード済み",
+  zairyuFront:"表面",zairyuBack:"裏面",
+  generating:"ファイルを作成中...",pleaseWait:"お待ちください",
+  emailReady:"ダウンロード完了！ZIPをメールに添付してください。",multiFile:"複数ファイル選択可",
+  workCountry:"勤務した国",workVisa:"日本での在留資格",
+  countryJP:"日本",countryHome:"母国",countryOther:"その他の国",workJobType:"仕事内容 / 在留資格",
+  uploadFirst:"📸 先に在留カードと証明書をアップロードしてください。入力の際に参考画像として表示されます。",
+  refImages:"📋 アップロード画像を参照：",
+  emailStep1:"1️⃣ ZIPファイルがダウンロードされました",emailStep2:"2️⃣ メールアプリが開いたらZIPを添付",emailStep3:"3️⃣ 送信して完了",
+  motivation:"志望動機",work_exp:"業務経験",career_plan:"キャリアプラン",self_pr:"自己PR",
+  appealNote:"<b>⭐ アピール項目 — 任意です。</b><br>空欄のまま「次へ」でも構いません。記入すると採用担当への印象が良くなります。",
+  weFacility:"施設の種類",weResidents:"利用者数（名）",weKaigodo:"平均介護度",
+  weDuties:"経験した業務に ✓ を入れてください",
+  dutyMeal:"食事介助",dutyExcret:"排せつ介助",dutyBath:"入浴介助",dutyTransfer:"移乗・移動介助",dutyRecre:"レクリエーション",dutyOther:"その他（服薬・バイタル測定・口腔ケア等）",dutyLife:"生活支援（調理・清掃・洗濯等）",
+  weNight:"夜勤あり",weNightCount:"回/月",weNightStaff:"職員数/回",weNightUsers:"担当利用者数",
+  weRecord:"記録報告の方法",recHand:"手書き",recPC:"パソコン",recTablet:"タブレット",
+  ocrReading:"在留カードを読み取り中...",ocrDone:"読み取り完了！",ocrFail:"読み取れませんでした。手入力してください。",ocrReadingCert:"証明書を読み取り中...",autoFilled:"（在留カードから自動入力）",
+},
 id:{
   welcome:"Selamat Datang!",welcomeDesc:"Silakan jawab pertanyaan berikut untuk membuat 履歴書.",
   start:"Mulai",prev:"← Kembali",next:"Berikutnya →",submit:"Konfirmasi ✓",
@@ -335,7 +379,47 @@ mn:{welcome:"Тавтай морилно уу!",welcomeDesc:"履歴書 бүтэ�
 zh:{welcome:"欢迎！",welcomeDesc:"回答问题创建 履歴書。",start:"开始",prev:"← 返回",next:"下一步 →",submit:"确认 ✓",download:"下载ZIP",sendEmail:"发邮件",restart:"重填",successT:"完成！",successD:"已创建。",reviewT:"确认",reviewD:"发送前确认：",emailT:"选择邮箱：",qLabel:"问题",male:"男",female:"女",other:"其他",yes:"有",no:"无",addRow:"+ 添加",startDate:"开始",endDate:"结束",detail:"内容",uploadPhoto:"上传照片",furigana:"假名",fullname:"全名",dob:"出生日期",gender:"性别",photo:"照片 (3×4)",postcode:"邮编",address:"地址",phone:"电话",email:"邮箱",visa:"在留资格",visa_exp:"在留期限",nationality:"国籍",spouse:"配偶",dependents:"被抚养人",education:"学历 (学歴)",work:"工作经历 (職歴)",license:"资格 (免許・資格)",remarks:"备注 (備考)",zairyu:"在留卡 (在留カード)",cert_photos:"上传证书",eduHint:"学校、专业",eduNote1:"<b>⚠️:</b> 填写<b>本国最后学校</b>。",eduNote2:"日本学习填写<b>所有学校</b>。",eduNote3:"<b>语言中心</b>也填写在此。",eduNote4:"<b>⚠️ 大学/大专/专门学校毕业者必须填写专业。</b>",eduCountry:"学校所在国家",eduMajor:"专业 (学部・専攻)",workHint:"公司、职位",workNote1:"<b>⚠️:</b> <b>完整填写</b>。",workCompany:"公司名称 (企業名)",workJob:"工作内容 (仕事内容)",licHint:"证书",current:"至今",pass:"合格",certSenmon:"専門級",certLicense:"驾驶证",certJlpt:"JLPT/NAT",certTokutei:"特定技能",certOther:"其他",uploadClick:"选择文件",uploaded:"已上传",zairyuFront:"正面",zairyuBack:"背面",generating:"生成中...",pleaseWait:"请稍候",emailReady:"已下载！",multiFile:"可选多个文件",workCountry:"工作国家",workVisa:"日本在留资格",countryJP:"日本",countryHome:"我的国家",countryOther:"其他国家",workJobType:"工作 / 签证",motivation:"志望动机 (志望動機)",work_exp:"详细业务经验 (業務経験)",career_plan:"职业规划 (キャリアプラン)",self_pr:"自我PR (自己PR)",appealNote:"<b>⭐ 附加项目——非必填。</b><br>可留空直接点下一步。填写后简历更有竞争力。",weFacility:"设施类型 (施設の種類)",weResidents:"使用者人数 (名)",weKaigodo:"平均介护度 (平均介護度)",weDuties:"勾选 ✓ 做过的工作 (業務内容)",dutyMeal:"用餐协助（部分・全面）",dutyExcret:"排泄协助（换尿布、如厕引导）",dutyBath:"洗浴协助（一般浴・机械浴）",dutyTransfer:"移乘、移动协助（轮椅⇔床）",dutyRecre:"娱乐活动",dutyOther:"其他（服药协助、测生命体征、口腔护理、洗脸、梳头）",dutyLife:"生活支援（做饭、打扫、整理床铺、洗衣）",weNight:"有夜班 (夜勤)",weNightCount:"次/月",weNightStaff:"每班职员数",weNightUsers:"负责使用者人数",weRecord:"记录报告方式 (記録報告)",recHand:"手写",recPC:"电脑",recTablet:"平板"},
 my:{welcome:"ကြိုဆိုပါသည်!",welcomeDesc:"履歴書 ဖန်တီးရန်။",start:"စတင်",prev:"← နောက်",next:"ရှေ့ →",submit:"အတည်ပြု ✓",download:"ZIP ဒေါင်းလုဒ်",sendEmail:"အီးမေးလ်",restart:"ပြန်စ",successT:"ပြီးပါပြီ!",successD:"ဖန်တီးပြီးပါပြီ။",reviewT:"စစ်ဆေး",reviewD:"စစ်ဆေးပါ:",emailT:"အီးမေးလ်ရွေးပါ:",qLabel:"မေးခွန်း",male:"ကျား 男",female:"မ 女",other:"အခြား",yes:"ရှိ 有",no:"မရှိ 無",addRow:"+ ထပ်ထည့်",startDate:"စတင်",endDate:"ပြီးဆုံး",detail:"အသေးစိတ်",uploadPhoto:"ဓာတ်ပုံတင်",furigana:"Katakana",fullname:"အမည်",dob:"မွေးနေ့",gender:"ကျား/မ",photo:"ဓာတ်ပုံ (3×4)",postcode:"စာတိုက်ကုဒ်",address:"လိပ်စာ",phone:"ဖုန်း",email:"အီးမေးလ်",visa:"နေထိုင်ခွင့်",visa_exp:"ဗီဇာသက်တမ်း",nationality:"နိုင်ငံသား",spouse:"အိမ်ထောင်ရေး",dependents:"မှီခိုသူ",education:"ပညာရေး (学歴)",work:"အလုပ် (職歴)",license:"လက်မှတ် (免許・資格)",remarks:"မှတ်ချက် (備考)",zairyu:"နေထိုင်ခွင့်ကတ် (在留カード)",cert_photos:"လက်မှတ်တင်ပါ",eduHint:"ကျောင်း",eduNote1:"<b>⚠️:</b> <b>နောက်ဆုံးကျောင်း</b>ရေးပါ။",eduNote2:"ဂျပန်တွင် <b>အားလုံးရေးပါ</b>။",eduNote3:"<b>ဘာသာစကားသင်တန်း</b>လည်း ဤတွင်ရေးပါ။",eduNote4:"<b>⚠️ တက္ကသိုလ်/ကောလိပ်/専門学校 ပြီးသူများ အထူးပြုဘာသာ မဖြစ်မနေရေးပါ။</b>",eduCountry:"ကျောင်းတည်ရှိရာနိုင်ငံ",eduMajor:"အထူးပြုဘာသာ (学部・専攻)",workHint:"ကုမ္ပဏီ",workNote1:"<b>⚠️:</b> <b>အပြည့်ရေးပါ</b>။",workCompany:"ကုမ္ပဏီအမည် (企業名)",workJob:"လုပ်ငန်းအကြောင်းအရာ (仕事内容)",licHint:"လက်မှတ်",current:"လက်ရှိ",pass:"အောင်မြင်",certSenmon:"専門級",certLicense:"ယာဉ်မောင်း",certJlpt:"JLPT/NAT",certTokutei:"特定技能",certOther:"အခြား",uploadClick:"ဖိုင်ရွေးပါ",uploaded:"တင်ပြီး",zairyuFront:"ရှေ့",zairyuBack:"နောက်",generating:"ဖန်တီးနေသည်...",pleaseWait:"ခဏစောင့်ပါ",emailReady:"အဆင်သင့်!",multiFile:"ဖိုင်များစွာရွေးနိုင်",workCountry:"အလုပ်လုပ်သည့်နိုင်ငံ",workVisa:"ဂျပန်နေထိုင်ခွင့်",countryJP:"ဂျပန် 日本",countryHome:"ကျွန်ုပ်နိုင်ငံ",countryOther:"အခြားနိုင်ငံ",workJobType:"အလုပ် / Visa",motivation:"လျှောက်ထားရသည့်အကြောင်းရင်း (志望動機)",work_exp:"လုပ်ငန်းအတွေ့အကြုံအသေးစိတ် (業務経験)",career_plan:"အလုပ်အကိုင်အစီအစဉ် (キャリアプラン)",self_pr:"ကိုယ်ပိုင် PR (自己PR)",appealNote:"<b>⭐ ထပ်ဆောင်းအပိုင်း — မဖြည့်လည်းရပါသည်။</b><br>ဗလာထားပြီး ရှေ့ကိုနှိပ်နိုင်သည်။ ဖြည့်ပါက ပရိုဖိုင်ပိုအားကောင်းပါမည်။",weFacility:"လုပ်ငန်းခွင်အမျိုးအစား (施設の種類)",weResidents:"အသုံးပြုသူဦးရေ (名)",weKaigodo:"ပျမ်းမျှစောင့်ရှောက်မှုအဆင့် (平均介護度)",weDuties:"လုပ်ခဲ့ဖူးသောအလုပ်များကို ✓ ရွေးပါ (業務内容)",dutyMeal:"အစားအသောက်ကူညီခြင်း",dutyExcret:"အညစ်အကြေးစွန့်ကူညီခြင်း (diaper လဲ၊ အိမ်သာပို့)",dutyBath:"ရေချိုးကူညီခြင်း",dutyTransfer:"နေရာရွှေ့ကူညီခြင်း (ဘီးတပ်ကုလားထိုင်⇔အိပ်ရာ)",dutyRecre:"ဖျော်ဖြေရေးလှုပ်ရှားမှု",dutyOther:"အခြား (ဆေးတိုက်၊ vital တိုင်း၊ ခံတွင်းစောင့်ရှောက်၊ မျက်နှာသစ်၊ ဆံပင်ဖီး)",dutyLife:"နေထိုင်မှုပံ့ပိုး (ချက်ပြုတ်၊ အခန်းသန့်ရှင်း၊ အိပ်ရာပြင်၊ လျှော်ဖွပ်)",weNight:"ညဆိုင်းရှိသည် (夜勤)",weNightCount:"ကြိမ်/လ",weNightStaff:"ဝန်ထမ်း/ဆိုင်း",weNightUsers:"တာဝန်ယူသူဦးရေ",weRecord:"မှတ်တမ်းရေးနည်း (記録報告)",recHand:"လက်ရေး",recPC:"ကွန်ပျူတာ",recTablet:"တက်ဘလက်"},
 th:{welcome:"ยินดีต้อนรับ!",welcomeDesc:"ตอบคำถามเพื่อสร้าง 履歴書",start:"เริ่ม",prev:"← ย้อน",next:"ถัดไป →",submit:"ยืนยัน ✓",download:"ดาวน์โหลด ZIP",sendEmail:"ส่งอีเมล",restart:"เริ่มใหม่",successT:"เสร็จ!",successD:"สร้างเรียบร้อย",reviewT:"ตรวจสอบ",reviewD:"ตรวจก่อนส่ง:",emailT:"เลือกอีเมล:",qLabel:"คำถาม",male:"ชาย 男",female:"หญิง 女",other:"อื่นๆ",yes:"มี 有",no:"ไม่มี 無",addRow:"+ เพิ่ม",startDate:"เริ่ม",endDate:"สิ้นสุด",detail:"รายละเอียด",uploadPhoto:"อัปโหลด",furigana:"ชื่อ Katakana",fullname:"ชื่อ-สกุล",dob:"วันเกิด",gender:"เพศ",photo:"รูป (3×4)",postcode:"รหัสไปรษณีย์",address:"ที่อยู่",phone:"เบอร์โทร",email:"อีเมล",visa:"สถานะวีซ่า",visa_exp:"หมดอายุวีซ่า",nationality:"สัญชาติ",spouse:"สมรส",dependents:"ผู้อยู่ในอุปการะ",education:"การศึกษา (学歴)",work:"ประสบการณ์ (職歴)",license:"ใบรับรอง (免許・資格)",remarks:"หมายเหตุ (備考)",zairyu:"บัตรพำนัก (在留カード)",cert_photos:"อัปโหลดใบรับรอง",eduHint:"โรงเรียน สาขา",eduNote1:"<b>⚠️:</b> เขียน<b>โรงเรียนสุดท้าย</b>",eduNote2:"ญี่ปุ่น เขียน<b>ทุกโรงเรียน</b>",eduNote3:"<b>ศูนย์ภาษา</b>ก็เขียนในนี้ด้วย",eduNote4:"<b>⚠️ จบมหาวิทยาลัย/วิทยาลัย/โรงเรียนอาชีวะ ต้องระบุสาขาวิชา</b>",eduCountry:"ประเทศของโรงเรียน",eduMajor:"สาขาวิชา (学部・専攻)",workHint:"บริษัท ตำแหน่ง",workNote1:"<b>⚠️:</b> เขียน<b>ครบ</b>",workCompany:"ชื่อบริษัท (企業名)",workJob:"เนื้อหางาน (仕事内容)",licHint:"ใบรับรอง",current:"ปัจจุบัน",pass:"ผ่าน",certSenmon:"専門級",certLicense:"ใบขับขี่",certJlpt:"JLPT/NAT",certTokutei:"特定技能",certOther:"อื่นๆ",uploadClick:"เลือกไฟล์",uploaded:"อัปโหลดแล้ว",zairyuFront:"ด้านหน้า",zairyuBack:"ด้านหลัง",generating:"กำลังสร้าง...",pleaseWait:"กรุณารอ",emailReady:"ไฟล์พร้อม!",multiFile:"เลือกหลายไฟล์ได้",workCountry:"ประเทศทำงาน",workVisa:"สถานะวีซ่าญี่ปุ่น",countryJP:"ญี่ปุ่น 日本",countryHome:"ประเทศของฉัน",countryOther:"ประเทศอื่น",workJobType:"งาน / วีซ่า",motivation:"เหตุผลที่สมัคร (志望動機)",work_exp:"ประสบการณ์งานโดยละเอียด (業務経験)",career_plan:"แผนอาชีพ (キャリアプラン)",self_pr:"PR ตนเอง (自己PR)",appealNote:"<b>⭐ ส่วนเพิ่มเติม — ไม่บังคับ</b><br>เว้นว่างแล้วกดถัดไปได้ กรอกแล้วโปรไฟล์จะแข็งแกร่งขึ้น",weFacility:"ประเภทสถานที่ (施設の種類)",weResidents:"จำนวนผู้ใช้บริการ (名)",weKaigodo:"ระดับการดูแลเฉลี่ย (平均介護度)",weDuties:"เลือก ✓ งานที่เคยทำ (業務内容)",dutyMeal:"ช่วยรับประทานอาหาร",dutyExcret:"ช่วยขับถ่าย (เปลี่ยนผ้าอ้อม พาเข้าห้องน้ำ)",dutyBath:"ช่วยอาบน้ำ",dutyTransfer:"ช่วยเคลื่อนย้าย (รถเข็น⇔เตียง)",dutyRecre:"กิจกรรมนันทนาการ",dutyOther:"อื่นๆ (ให้ยา วัดสัญญาณชีพ ดูแลช่องปาก ล้างหน้า หวีผม)",dutyLife:"ช่วยชีวิตประจำวัน (ทำอาหาร ทำความสะอาด จัดเตียง ซักผ้า)",weNight:"มีเวรกลางคืน (夜勤)",weNightCount:"ครั้ง/เดือน",weNightStaff:"พนักงาน/เวร",weNightUsers:"จำนวนผู้ใช้ที่รับผิดชอบ",weRecord:"วิธีบันทึกรายงาน (記録報告)",recHand:"เขียนมือ",recPC:"คอมพิวเตอร์",recTablet:"แท็บเล็ต"},
-bn:{welcome:"স্বাগতম!",welcomeDesc:"履歴書 তৈরি করুন।",start:"শুরু",prev:"← পিছনে",next:"পরবর্তী →",submit:"নিশ্চিত ✓",download:"ZIP ডাউনলোড",sendEmail:"ইমেইল",restart:"আবার",successT:"সম্পন্ন!",successD:"তৈরি হয়েছে।",reviewT:"পরীক্ষা",reviewD:"পাঠানোর আগে পরীক্ষা:",emailT:"ইমেইল নির্বাচন:",qLabel:"প্রশ্ন",male:"পুরুষ 男",female:"মহিলা 女",other:"অন্যান্য",yes:"হ্যাঁ 有",no:"না 無",addRow:"+ যোগ",startDate:"শুরু",endDate:"শেষ",detail:"বিবরণ",uploadPhoto:"ছবি আপলোড",furigana:"Katakana নাম",fullname:"পূর্ণ নাম",dob:"জন্ম তারিখ",gender:"লিঙ্গ",photo:"ছবি (3×4)",postcode:"পোস্টাল কোড",address:"ঠিকানা",phone:"ফোন",email:"ইমেইল",visa:"বসবাসের মর্যাদা",visa_exp:"ভিসার মেয়াদ",nationality:"জাতীয়তা",spouse:"বৈবাহিক",dependents:"নির্ভরশীল",education:"শিক্ষা (学歴)",work:"কাজের অভিজ্ঞতা (職歴)",license:"সার্টিফিকেট (免許・資格)",remarks:"মন্তব্য (備考)",zairyu:"বাসস্থান কার্ড (在留カード)",cert_photos:"সার্টিফিকেট আপলোড",eduHint:"বিদ্যালয়, বিষয়",eduNote1:"<b>⚠️:</b> <b>শেষ বিদ্যালয়</b> লিখুন।",eduNote2:"জাপানে <b>সব বিদ্যালয়</b> লিখুন।",eduNote3:"<b>ভাষা কেন্দ্রে</b>ও এখানে লিখুন।",eduNote4:"<b>⚠️ বিশ্ববিদ্যালয়/কলেজ/ভোকেশনাল স্কুল স্নাতকদের বিষয় লেখা বাধ্যতামূলক।</b>",eduCountry:"স্কুলের দেশ",eduMajor:"বিষয়/অনুষদ (学部・専攻)",workHint:"কোম্পানি",workNote1:"<b>⚠️:</b> <b>পূর্ণ</b> লিখুন।",workCompany:"কোম্পানির নাম (企業名)",workJob:"কাজের বিবরণ (仕事内容)",licHint:"সার্টিফিকেট",current:"বর্তমান",pass:"উত্তীর্ণ",certSenmon:"専門級",certLicense:"ড্রাইভিং",certJlpt:"JLPT/NAT",certTokutei:"特定技能",certOther:"অন্যান্য",uploadClick:"ফাইল নির্বাচন",uploaded:"আপলোড হয়েছে",zairyuFront:"সামনে",zairyuBack:"পিছনে",generating:"তৈরি হচ্ছে...",pleaseWait:"অপেক্ষা করুন",emailReady:"প্রস্তুত!",multiFile:"একাধিক ফাইল নির্বাচন করুন",workCountry:"কর্মদেশ",workVisa:"জাপানে বসবাসের মর্যাদা",countryJP:"জাপান 日本",countryHome:"আমার দেশ",countryOther:"অন্য দেশ",workJobType:"কাজ / ভিসা",motivation:"আবেদনের কারণ (志望動機)",work_exp:"বিস্তারিত কাজের অভিজ্ঞতা (業務経験)",career_plan:"ক্যারিয়ার পরিকল্পনা (キャリアプラン)",self_pr:"আত্ম PR (自己PR)",appealNote:"<b>⭐ অতিরিক্ত অংশ — বাধ্যতামূলক নয়।</b><br>খালি রেখে পরবর্তী চাপা যাবে। পূরণ করলে প্রোফাইল শক্তিশালী হবে।",weFacility:"প্রতিষ্ঠানের ধরন (施設の種類)",weResidents:"ব্যবহারকারীর সংখ্যা (名)",weKaigodo:"গড় সেবার মাত্রা (平均介護度)",weDuties:"যে কাজগুলো করেছেন ✓ নির্বাচন করুন (業務内容)",dutyMeal:"খাওয়ায় সহায়তা",dutyExcret:"মলমূত্র ত্যাগে সহায়তা (ডায়াপার বদল, টয়লেটে নেওয়া)",dutyBath:"গোসলে সহায়তা",dutyTransfer:"স্থানান্তরে সহায়তা (হুইলচেয়ার⇔বিছানা)",dutyRecre:"বিনোদন কার্যক্রম",dutyOther:"অন্যান্য (ওষুধ, ভাইটাল সাইন, মুখের যত্ন, মুখ ধোয়া, চুল আঁচড়ানো)",dutyLife:"জীবনযাত্রায় সহায়তা (রান্না, ঘর পরিষ্কার, বিছানা গোছানো, কাপড় ধোয়া)",weNight:"নাইট শিফট আছে (夜勤)",weNightCount:"বার/মাস",weNightStaff:"কর্মী/শিফট",weNightUsers:"দায়িত্বপ্রাপ্ত ব্যবহারকারীর সংখ্যা",weRecord:"রিপোর্ট লেখার পদ্ধতি (記録報告)",recHand:"হাতে লেখা",recPC:"কম্পিউটার",recTablet:"ট্যাবলেট"}
+bn:{welcome:"স্বাগতম!",welcomeDesc:"履歴書 তৈরি করুন।",start:"শুরু",prev:"← পিছনে",next:"পরবর্তী →",submit:"নিশ্চিত ✓",download:"ZIP ডাউনলোড",sendEmail:"ইমেইল",restart:"আবার",successT:"সম্পন্ন!",successD:"তৈরি হয়েছে।",reviewT:"পরীক্ষা",reviewD:"পাঠানোর আগে পরীক্ষা:",emailT:"ইমেইল নির্বাচন:",qLabel:"প্রশ্ন",male:"পুরুষ 男",female:"মহিলা 女",other:"অন্যান্য",yes:"হ্যাঁ 有",no:"না 無",addRow:"+ যোগ",startDate:"শুরু",endDate:"শেষ",detail:"বিবরণ",uploadPhoto:"ছবি আপলোড",furigana:"Katakana নাম",fullname:"পূর্ণ নাম",dob:"জন্ম তারিখ",gender:"লিঙ্গ",photo:"ছবি (3×4)",postcode:"পোস্টাল কোড",address:"ঠিকানা",phone:"ফোন",email:"ইমেইল",visa:"বসবাসের মর্যাদা",visa_exp:"ভিসার মেয়াদ",nationality:"জাতীয়তা",spouse:"বৈবাহিক",dependents:"নির্ভরশীল",education:"শিক্ষা (学歴)",work:"কাজের অভিজ্ঞতা (職歴)",license:"সার্টিফিকেট (免許・資格)",remarks:"মন্তব্য (備考)",zairyu:"বাসস্থান কার্ড (在留カード)",cert_photos:"সার্টিফিকেট আপলোড",eduHint:"বিদ্যালয়, বিষয়",eduNote1:"<b>⚠️:</b> <b>শেষ বিদ্যালয়</b> লিখুন।",eduNote2:"জাপানে <b>সব বিদ্যালয়</b> লিখুন।",eduNote3:"<b>ভাষা কেন্দ্রে</b>ও এখানে লিখুন।",eduNote4:"<b>⚠️ বিশ্ববিদ্যালয়/কলেজ/ভোকেশনাল স্কুল স্নাতকদের বিষয় লেখা বাধ্যতামূলক।</b>",eduCountry:"স্কুলের দেশ",eduMajor:"বিষয়/অনুষদ (学部・専攻)",workHint:"কোম্পানি",workNote1:"<b>⚠️:</b> <b>পূর্ণ</b> লিখুন।",workCompany:"কোম্পানির নাম (企業名)",workJob:"কাজের বিবরণ (仕事内容)",licHint:"সার্টিফিকেট",current:"বর্তমান",pass:"উত্তীর্ণ",certSenmon:"専門級",certLicense:"ড্রাইভিং",certJlpt:"JLPT/NAT",certTokutei:"特定技能",certOther:"অন্যান্য",uploadClick:"ফাইল নির্বাচন",uploaded:"আপলোড হয়েছে",zairyuFront:"সামনে",zairyuBack:"পিছনে",generating:"তৈরি হচ্ছে...",pleaseWait:"অপেক্ষা করুন",emailReady:"প্রস্তুত!",multiFile:"একাধিক ফাইল নির্বাচন করুন",workCountry:"কর্মদেশ",workVisa:"জাপানে বসবাসের মর্যাদা",countryJP:"জাপান 日本",countryHome:"আমার দেশ",countryOther:"অন্য দেশ",workJobType:"কাজ / ভিসা",motivation:"আবেদনের কারণ (志望動機)",work_exp:"বিস্তারিত কাজের অভিজ্ঞতা (業務経験)",career_plan:"ক্যারিয়ার পরিকল্পনা (キャリアプラン)",self_pr:"আত্ম PR (自己PR)",appealNote:"<b>⭐ অতিরিক্ত অংশ — বাধ্যতামূলক নয়।</b><br>খালি রেখে পরবর্তী চাপা যাবে। পূরণ করলে প্রোফাইল শক্তিশালী হবে।",weFacility:"প্রতিষ্ঠানের ধরন (施設の種類)",weResidents:"ব্যবহারকারীর সংখ্যা (名)",weKaigodo:"গড় সেবার মাত্রা (平均介護度)",weDuties:"যে কাজগুলো করেছেন ✓ নির্বাচন করুন (業務内容)",dutyMeal:"খাওয়ায় সহায়তা",dutyExcret:"মলমূত্র ত্যাগে সহায়তা (ডায়াপার বদল, টয়লেটে নেওয়া)",dutyBath:"গোসলে সহায়তা",dutyTransfer:"স্থানান্তরে সহায়তা (হুইলচেয়ার⇔বিছানা)",dutyRecre:"বিনোদন কার্যক্রম",dutyOther:"অন্যান্য (ওষুধ, ভাইটাল সাইন, মুখের যত্ন, মুখ ধোয়া, চুল আঁচড়ানো)",dutyLife:"জীবনযাত্রায় সহায়তা (রান্না, ঘর পরিষ্কার, বিছানা গোছানো, কাপড় ধোয়া)",weNight:"নাইট শিফট আছে (夜勤)",weNightCount:"বার/মাস",weNightStaff:"কর্মী/শিফট",weNightUsers:"দায়িত্বপ্রাপ্ত ব্যবহারকারীর সংখ্যা",weRecord:"রিপোর্ট লেখার পদ্ধতি (記録報告)",recHand:"হাতে লেখা",recPC:"কম্পিউটার",recTablet:"ট্যাবলেট"},
+si:{
+  welcome:"සාදරයෙන් පිළිගනිමු!",welcomeDesc:"ප්‍රශ්නවලට පිළිතුරු දී 履歴書 (ජීවදත්ත පත්‍රය) සාදන්න.",
+  start:"අරඹන්න",prev:"← ආපසු",next:"ඊළඟ →",submit:"තහවුරු ✓",
+  download:"ZIP බාගන්න (Word + ඡායාරූප)",sendEmail:"ඊමේල් යවන්න",restart:"නැවත අරඹන්න",
+  successT:"සම්පූර්ණයි!",successD:"履歴書 සාර්ථකව සෑදුණි.",
+  reviewT:"තොරතුරු පරීක්ෂා කරන්න",reviewD:"යැවීමට පෙර පරීක්ෂා කරන්න:",emailT:"ඊමේල් තෝරන්න:",qLabel:"ප්‍රශ්නය",
+  male:"පිරිමි 男",female:"ගැහැණු 女",other:"වෙනත්",yes:"ඇත 有",no:"නැත 無",
+  addRow:"+ පේළියක් එකතු කරන්න",startDate:"ආරම්භය",endDate:"අවසානය",detail:"විස්තර",uploadPhoto:"ඡායාරූපය උඩුගත කරන්න",
+  furigana:"කටකානා නම (フリガナ)",fullname:"සම්පූර්ණ නම",fullnameHint:"⚠️ ඉංග්‍රීසි කැපිටල් අකුරින් ලියන්න\n(උදා: PERERA NIMAL)",dob:"උපන් දිනය",
+  gender:"ස්ත්‍රී/පුරුෂ භාවය",photo:"ඡායාරූපය (3×4)",postcode:"තැපැල් කේතය (〒)",
+  address:"ජපානයේ වත්මන් ලිපිනය",phone:"දුරකථන අංකය",email:"ඊමේල්",
+  visa:"පදිංචි තත්ත්වය (在留資格)",visa_exp:"වීසා කල් ඉකුත්වන දිනය",nationality:"ජාතිකත්වය",spouse:"විවාහක තත්ත්වය (配偶者)",
+  dependents:"යැපෙන්නන් (扶養者)",education:"අධ්‍යාපනය (学歴)",work:"රැකියා පළපුරුද්ද (職歴)",license:"සහතික (免許・資格)",
+  zairyu:"පදිංචි කාඩ්පත (在留カード)",cert_photos:"සහතික උඩුගත කරන්න",
+  eduHint:"පාසලේ නම + විෂය ලියන්න",
+  eduNote1:"<b>⚠️</b> ඔබේ රටේ <b>අවසාන පාසල</b> ලියන්න.",
+  eduNote2:"ජපානයේ ඉගෙන ගත්තා නම් <b>සියලු පාසල්</b> ලියන්න.",
+  eduNote3:"<b>ජපන් භාෂා මධ්‍යස්ථාන</b> ද මෙහි ලියන්න.",
+  eduNote4:"<b>⚠️ විශ්වවිද්‍යාල/විද්‍යාල/වෘත්තීය පාසල් අවසන් කළ අය විෂය අනිවාර්යයෙන් ලිවිය යුතුය.</b>",
+  eduCountry:"පාසල පිහිටි රට",eduMajor:"විෂය/පීඨය (学部・専攻)",
+  workHint:"සමාගම + රැකියාව",workNote1:"<b>⚠️</b> පාසල අවසන් වූ දා සිට ජපානයට එනතුරු <b>හිස් කාල නොමැතිව</b> ලියන්න.",
+  workCompany:"සමාගමේ නම (企業名)",workJob:"රැකියා අන්තර්ගතය (仕事内容)",
+  licHint:"සහතිකයේ නම සහ ප්‍රතිඵලය",current:"දැනට",pass:"සමත්",
+  certSenmon:"専門級",certLicense:"රියදුරු බලපත්‍රය",certJlpt:"JLPT/NAT",certTokutei:"特定技能",certOther:"වෙනත්",
+  uploadClick:"ගොනුව තෝරන්න (රූප/PDF)",uploaded:"උඩුගත විය",
+  zairyuFront:"ඉදිරිපස",zairyuBack:"පිටුපස",
+  generating:"ජපන් භාෂාවට පරිවර්තනය කර ගොනුව සාදමින්...",pleaseWait:"රැඳී සිටින්න",
+  emailReady:"ගොනුව බාගත විය! ZIP ගොනුව ඊමේල් වෙත අමුණන්න.",multiFile:"ගොනු කිහිපයක් තෝරාගත හැක",
+  workCountry:"රැකියාව කළ රට",workVisa:"ජපානයේ පදිංචි තත්ත්වය",
+  countryJP:"ජපානය 日本",countryHome:"මගේ රට",countryOther:"වෙනත් රටක්",workJobType:"රැකියාව / වීසා",
+  uploadFirst:"📸 මුලින්ම පදිංචි කාඩ්පත සහ සහතික උඩුගත කරන්න. පිරවීමේදී ඒවා පෙන්වනු ඇත.",
+  refImages:"📋 උඩුගත කළ රූප:",
+  emailStep1:"1️⃣ ZIP ගොනුව බාගත විය",emailStep2:"2️⃣ ඊමේල් යෙදුමේ ZIP අමුණන්න",emailStep3:"3️⃣ යවන්න",
+  motivation:"අයදුම් කිරීමේ හේතුව (志望動機)",work_exp:"සවිස්තර රැකියා පළපුරුද්ද (業務経験)",career_plan:"වෘත්තීය සැලැස්ම (キャリアプラン)",self_pr:"ස්වයං හඳුන්වාදීම (自己PR)",
+  appealNote:"<b>⭐ අමතර කොටස — අනිවාර්ය නොවේ.</b><br>හිස්ව තබා ඊළඟ ඔබන්න පුළුවන්. පිරවුවහොත් ඔබේ අයදුම්පත වඩාත් ශක්තිමත් වේ.",
+  weFacility:"ආයතන වර්ගය (施設の種類)",weResidents:"සේවාලාභීන් ගණන (名)",weKaigodo:"සාමාන්‍ය සත්කාර මට්ටම (平均介護度)",
+  weDuties:"කළ රැකියා ✓ තෝරන්න (業務内容)",
+  dutyMeal:"ආහාර ගැනීමට උදව් කිරීම",dutyExcret:"මලමූත්‍ර පහ කිරීමට උදව් (ඩයපර් මාරු කිරීම, වැසිකිළියට රැගෙන යාම)",dutyBath:"නෑමට උදව් කිරීම",dutyTransfer:"මාරු කිරීම/චලනයට උදව් (රෝද පුටුව⇔ඇඳ)",dutyRecre:"විනෝදාත්මක ක්‍රියාකාරකම්",dutyOther:"වෙනත් (බෙහෙත් දීම, vital මැනීම, මුඛ සත්කාරය, මුහුණ සේදීම, කොණ්ඩය පීරීම)",dutyLife:"ජීවන සහාය (ඉවුම් පිහුම්, කාමර පිරිසිදු කිරීම, ඇඳ සැකසීම, රෙදි සේදීම)",
+  weNight:"රාත්‍රී වැඩමුරාව ඇත (夜勤)",weNightCount:"වාර/මාසය",weNightStaff:"සේවකයන්/මුරය",weNightUsers:"භාරව සිටි සේවාලාභීන් ගණන",
+  weRecord:"වාර්තා ලිවීමේ ක්‍රමය (記録報告)",recHand:"අතින් ලිවීම",recPC:"පරිගණකය",recTablet:"ටැබ්ලටය"}
 };
 
 // =========================================================
@@ -635,7 +719,7 @@ function parseZairyuFront(text){
     }
     // Fallback: scan for known nationality names in text
     if(!data.nationality){
-      const knownNat=['ベトナム','インドネシア','ネパール','ミャンマー','中国','カンボジア','モンゴル','タイ','バングラデシュ','フィリピン','韓国','ブラジル','ペルー'];
+      const knownNat=['ベトナム','インドネシア','ネパール','ミャンマー','中国','カンボジア','モンゴル','タイ','バングラデシュ','フィリピン','スリランカ','韓国','ブラジル','ペルー'];
       for(const kn of knownNat){if(text.includes(kn)){data.nationality=kn;break;}}
     }
   }
@@ -1057,6 +1141,7 @@ const JP_DICT=(function(){
   add(['thái lan','thai lan','thailand','タイ'],'タイ');
   add(['bangladesh','バングラデシュ','বাংলাদেশ'],'バングラデシュ');
   add(['philippines','philippin','フィリピン'],'フィリピン');
+  add(['sri lanka','srilanka','sri-lanka','ශ්‍රී ලංකාව','スリランカ'],'スリランカ');
   add(['nhật bản','nhat ban','japan','jepang','日本'],'日本');
   // Gender
   add(['nam','laki-laki','male','ប្រុស','पुरुष','Эрэгтэй','男','ကျား','ชาย','পুরুষ'],'男性');
@@ -1101,7 +1186,7 @@ const JP_DICT=(function(){
 })();
 
 // Lang code map for API
-const LANG_MAP={vi:'vi',id:'id',km:'km',ne:'ne',mn:'mn',zh:'zh-CN',my:'my',th:'th',bn:'bn'};
+const LANG_MAP={vi:'vi',ja:'ja',id:'id',km:'km',ne:'ne',mn:'mn',zh:'zh-CN',my:'my',th:'th',bn:'bn',si:'si'};
 
 // Google Translate (free gtx endpoint, no API key) \u2014 ch\u1EA5t l\u01B0\u1EE3ng cao cho c\u00E2u d\u00E0i
 async function gtxTranslate(text){
