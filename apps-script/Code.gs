@@ -37,12 +37,38 @@ function ticketSecret_() {
 }
 // Verify the small browser proof before the large ZIP upload. The signed ticket
 // binds an exact cached payload and allows two hours for a slow mobile upload.
+// Bound external verification work separately from mail. These caps leave
+// headroom below even the consumer account's 20,000 daily UrlFetch requests.
+// Public Apps Script execution itself remains subject to Google's platform limits.
+function reserveVerificationBudget_() {
+  var props=PropertiesService.getScriptProperties();
+  var limits=[['minute',60000,60],['hour',3600000,500],['day',86400000,10000]];
+  function readBudget() {
+    var budget=JSON.parse(props.getProperty('verification-budget')||'{}'),now=Date.now();
+    limits.forEach(function(limit){
+      var key=limit[0],window=Math.floor(now/limit[1]);
+      if(!budget[key]||budget[key].window!==window)budget[key]={window:window,count:0};
+      if(budget[key].count>=limit[2])throw new Error('Verification limit reached. Please try later or contact staff.');
+    });
+    return budget;
+  }
+  readBudget(); // Already-exhausted traffic never contends for the mail lock.
+  var lock=LockService.getScriptLock();
+  if(!lock.tryLock(100))throw new Error('Verification busy. Please try again shortly.');
+  try {
+    var budget=readBudget();
+    limits.forEach(function(limit){budget[limit[0]].count++;});
+    props.setProperty('verification-budget',JSON.stringify(budget));
+  } finally {lock.releaseLock();}
+}
+
 function issueTicket_(data) {
   if (typeof data.submissionId !== 'string' || !/^[a-f0-9-]{36}$/.test(data.submissionId) ||
       typeof data.payloadHash !== 'string' || !/^[a-f0-9]{64}$/.test(data.payloadHash) ||
       typeof data.token !== 'string' || !data.token || data.token.length>2048) throw new Error('Invalid verification request.');
   var secret=PropertiesService.getScriptProperties().getProperty('TURNSTILE_SECRET');
   if (!secret) throw new Error('Email verification is not configured.');
+  reserveVerificationBudget_();
   var result;
   try {
     var response=UrlFetchApp.fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify',{

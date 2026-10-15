@@ -24,7 +24,7 @@ function server(options={}){
   const context=vm.createContext({
     ContentService:{MimeType:{JSON:'application/json'},createTextOutput:text=>({setMimeType(){return this;},getContent(){return text;}})},
     PropertiesService:{getScriptProperties:()=>props},
-    LockService:{getScriptLock:()=>({waitLock(){assert.equal(locked,false);locked=true;},releaseLock(){locked=false;}})},
+    LockService:{getScriptLock:()=>({tryLock(){if(options.verificationBusy)return false;assert.equal(locked,false);locked=true;return true;},waitLock(){assert.equal(locked,false);locked=true;},releaseLock(){locked=false;}})},
     Utilities:{DigestAlgorithm:{SHA_256:'sha256'},Charset:{UTF_8:'utf8'},getUuid:()=>crypto.randomUUID(),
       computeDigest:(alg,value)=>[...crypto.createHash(alg).update(value).digest()],
       computeHmacSha256Signature:(value,key)=>[...crypto.createHmac('sha256',key).update(value).digest()],
@@ -112,4 +112,18 @@ test('entry count is bounded independently of compressed and expanded size',()=>
 });
 test('outer attachment always has a ZIP suffix regardless of caller filename',()=>{
   for(const fileName of ['resume.html','resume.ZIP','bad\nname.url']){const app=server();assert.equal(app.post(app.signed({fileName})).success,true);assert.match(app.sent[0][3].attachments[0].name,/\.zip$/);assert.doesNotMatch(app.sent[0][3].attachments[0].name,/[\r\n]/);}
+});
+
+test('invalid proofs cannot exceed external verification minute, hour or daily budgets',()=>{
+  for(const [key,duration,limit] of [['minute',60000,60],['hour',3600000,500],['day',86400000,10000]]){
+    const app=server();app.properties.set('verification-budget',JSON.stringify({[key]:{window:Math.floor(Date.now()/duration),count:limit}}));assert.equal(app.signed().ticket,undefined);assert.equal(app.fetched,0);assert.equal(app.sent.length,0);
+    app.properties.set('verification-budget',JSON.stringify({[key]:{window:Math.floor(Date.now()/duration)-1,count:limit}}));assert.ok(app.signed().ticket);assert.equal(app.fetched,1);
+  }
+  const busy=server({verificationBusy:true});assert.equal(busy.signed().ticket,undefined);assert.equal(busy.fetched,0);
+});
+
+test('exhausted verification traffic never queues on the mail lock',()=>{
+  const app=server();app.properties.set('verification-budget',JSON.stringify({day:{window:Math.floor(Date.now()/86400000),count:10000}}));
+  app.context.LockService.getScriptLock=()=>{throw new Error('Must not lock after exhaustion');};
+  assert.throws(()=>app.context.reserveVerificationBudget_(),/Verification limit reached/);assert.equal(app.fetched,0);
 });
