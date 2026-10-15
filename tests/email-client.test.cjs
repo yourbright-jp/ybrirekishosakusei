@@ -10,6 +10,7 @@ function client(mode){
   const calls=[],alerts=[];let success=0,downloads=0;
   const context=vm.createContext({
     TextEncoder,Uint8Array,Blob,Date,JSON,crypto:crypto.webcrypto,atob,
+    sessionStorage:{getItem(){return null;},setItem(){}},
     JSZip:class {file(){}folder(){return this;}async generateAsync(){return 'UEsFBgAAAAAAAAAAAAAAAAAAAAAAAA==';}},
     data:{fullname:'SYSTEM TEST'},photoData:null,zairyuFront:[],zairyuBack:[],certFiles:{},
     getSelectedEmails:()=>['staff@yourbright.co.jp'],t:()=>'',showLoading(){},hideLoading(){},
@@ -40,4 +41,10 @@ test('lost, invalid and failed responses never retry or show completion',async()
 test('double clicking while sending still produces only one POST',async()=>{
   const app=client('success');await Promise.all([app.run(),app.run()]);
   assert.equal(app.calls.filter(c=>c.options).length,1);
+});
+
+test('manual retry keeps the submission ID even when a response was lost',async()=>{
+  const app=client('network');await app.run();await app.run();
+  const challenges=app.calls.filter(c=>!c.options).map(c=>c.url);
+  assert.equal(challenges.length,2);assert.equal(challenges[0],challenges[1]);
 });

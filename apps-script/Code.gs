@@ -10,7 +10,7 @@ function jsonResponse_(value) {
 }
 
 function doGet(e) {
-  if (e && e.parameter && e.parameter.action === 'challenge') return jsonResponse_({success: true, challenge: challenge_()});
+  if (e && e.parameter && e.parameter.action === 'challenge') return jsonResponse_({success: true, challenge: challenge_(e.parameter.submissionId)});
   return jsonResponse_({success: true, service: 'yourbright-rirekisho-email', version: RESUME_VERSION});
 }
 
@@ -20,28 +20,33 @@ function escapeHtml_(value) {
   });
 }
 
-// A signed, ten-minute, single-use proof-of-work challenge adds bot cost without
+// A signed, two-hour, single-use proof-of-work challenge adds bot cost without
 // requiring an applicant login. Persistent limits protect the sender quota.
 function hex_(bytes) { return bytes.map(function (b) { return ('0' + (b & 255).toString(16)).slice(-2); }).join(''); }
 function digest_(value) { return hex_(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, value, Utilities.Charset.UTF_8)); }
-function challenge_() {
-  var lock = LockService.getScriptLock(); lock.waitLock(10000);
-  try {
-    var props = PropertiesService.getScriptProperties();
-    var secret = props.getProperty('challenge-secret');
-    if (!secret) { secret = Utilities.getUuid() + Utilities.getUuid(); props.setProperty('challenge-secret', secret); }
-    var token = Date.now() + '.' + Utilities.getUuid();
-    return {token: token, signature: hex_(Utilities.computeHmacSha256Signature(token, secret)), prefix: '000'};
-  } finally { lock.releaseLock(); }
+function challenge_(submissionId) {
+  submissionId = submissionId || Utilities.getUuid();
+  if (!/^[a-f0-9-]{36}$/.test(submissionId)) throw new Error('Invalid submission ID.');
+  var props = PropertiesService.getScriptProperties(), secret = props.getProperty('challenge-secret');
+  // Established challenges never take the mail-send lock. Only initialize once.
+  if (!secret) {
+    var lock = LockService.getScriptLock(); lock.waitLock(10000);
+    try {
+      secret = props.getProperty('challenge-secret');
+      if (!secret) { secret = Utilities.getUuid() + Utilities.getUuid(); props.setProperty('challenge-secret', secret); }
+    } finally { lock.releaseLock(); }
+  }
+  var token = Date.now() + '.' + submissionId + '.' + Utilities.getUuid();
+  return {token: token, signature: hex_(Utilities.computeHmacSha256Signature(token, secret)), prefix: '000'};
 }
 function verifyChallenge_(data) {
   var c = data.challenge;
-  if (!c || typeof c.token !== 'string' || !/^\d{13}\.[a-f0-9-]{36}$/.test(c.token) ||
+  if (!c || typeof c.token !== 'string' || !/^\d{13}\.[a-f0-9-]{36}\.[a-f0-9-]{36}$/.test(c.token) ||
       typeof c.signature !== 'string' || !/^[a-f0-9]{64}$/.test(c.signature) ||
       !Number.isInteger(data.proof) || data.proof < 0 || data.proof > 2000000) throw new Error('Invalid submission challenge.');
   var age = Date.now() - Number(c.token.split('.')[0]);
   var secret = PropertiesService.getScriptProperties().getProperty('challenge-secret');
-  if (age < 0 || age > 600000 || !secret ||
+  if (age < 0 || age > 7200000 || !secret ||
       hex_(Utilities.computeHmacSha256Signature(c.token, secret)) !== c.signature ||
       digest_(c.token + ':' + data.proof).slice(0, 3) !== '000') throw new Error('Submission challenge expired or invalid.');
 }
@@ -50,7 +55,7 @@ function sendOnce_(data, send) {
   var lock = LockService.getScriptLock(); lock.waitLock(10000);
   try {
     var props = PropertiesService.getScriptProperties(), now = Date.now();
-    var key = 'submission:' + data.challenge.token;
+    var key = 'submission:' + data.challenge.token.split('.')[1];
     var fingerprint = digest_(JSON.stringify([data.zipBase64, data.fullname, data.furigana, data.nationality, data.visa, data.phone, data.email, data.fileName]));
     var previous = props.getProperty(key);
     if (previous) {
@@ -63,7 +68,8 @@ function sendOnce_(data, send) {
     Object.keys(all).forEach(function (name) {
       if (name.indexOf('submission:') !== 0) return;
       var row = JSON.parse(all[name]);
-      if (now - row.time > 86400000) { props.deleteProperty(name); return; }
+      if (now - row.time > 7 * 86400000) { props.deleteProperty(name); return; }
+      if (now - row.time >= 86400000) return;
       dayCount++; if (now - row.time < 3600000) hourCount++;
     });
     if (hourCount >= 30 || dayCount >= 100 || MailApp.getRemainingDailyQuota() < 250) throw new Error('Email limit reached. Download the ZIP and contact staff.');
@@ -99,6 +105,13 @@ function validateZip_(bytes) {
         local + 30 + nameLength + u16(local + 28) + compressed > start ||
         u16(local + 8) !== method || u16(local + 6) !== u16(pos + 8) ||
         (!(u16(pos + 8) & 8) && (u32(local + 18) !== compressed || u32(local + 22) !== uncompressed || u32(local + 14) !== u32(pos + 16)))) fail();
+    if (!nameLength || nameLength > 4096) fail();
+    var entryName = Utilities.newBlob(bytes.slice(pos + 46, pos + 46 + nameLength)).getDataAsString('UTF-8');
+    var pathParts = entryName.split('/');
+    if (entryName.charAt(0) === '/' || /[\\:\x00]/.test(entryName) ||
+        pathParts.some(function (part, index) { return part === '.' || part === '..' || (!part && index < pathParts.length - 1); })) fail();
+    var mode = (u32(pos + 38) >>> 16) & 0xf000;
+    if ((mode && mode !== 0x8000 && mode !== 0x4000) || (u32(pos + 38) & 0x400)) fail();
     for (var j = 0; j < nameLength; j++) if (bytes[local + 30 + j] !== bytes[pos + 46 + j]) fail();
     pos = entryEnd;
   }

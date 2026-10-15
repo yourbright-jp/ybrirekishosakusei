@@ -25,7 +25,7 @@ function server(options = {}) {
       computeDigest: (algorithm,value) => [...crypto.createHash(algorithm).update(value).digest()],
       computeHmacSha256Signature: (value,key) => [...crypto.createHmac('sha256',key).update(value).digest()],
       base64Decode: value => options.decodedBytes || [...Buffer.from(value, 'base64')],
-      newBlob: (bytes, mime, name) => ({ bytes, mime, name })
+      newBlob: (bytes, mime, name) => ({ bytes, mime, name, getDataAsString: () => Buffer.from(bytes).toString('utf8') })
     },
     MailApp: {
       sendEmail: (...args) => { if (options.sendError) throw new Error(options.sendError); sent.push(args); },
@@ -36,7 +36,7 @@ function server(options = {}) {
   vm.runInContext(source, context);
   const post = data => JSON.parse(context.doPost({ postData: { contents: JSON.stringify(data) } }).getContent());
   function signed(extra={}) {
-    const challenge=context.challenge_();
+    const challenge=context.challenge_(extra.submissionId);
     let proof=0;
     while(!crypto.createHash('sha256').update(challenge.token+':'+proof).digest('hex').startsWith('000'))proof++;
     return request({challenge,proof,...extra});
@@ -166,4 +166,36 @@ test('ordinary ZIP entries pass, declared expansion bombs and mismatched headers
   const mismatch=Buffer.from(zip);mismatch.writeUInt32LE(0,22);
   assert.equal(app.post(app.signed({zipBase64:mismatch.toString('base64')})).success,false);
   assert.equal(app.sent.length,1);
+});
+
+test('a new challenge for the same submission ID cannot send a second message', () => {
+  const app=server(), first=app.signed();
+  assert.equal(app.post(first).success,true);
+  const second=app.signed({submissionId:first.challenge.token.split('.')[1]});
+  assert.equal(app.post(second).success,true);
+  assert.equal(app.sent.length,1);
+});
+test('issuing challenges after initialization never waits for the sending lock', () => {
+  const app=server();app.context.challenge_();
+  app.context.LockService.getScriptLock=()=>{throw new Error('Must not acquire established-secret lock');};
+  assert.ok(app.context.challenge_().signature);
+});
+test('a valid signed challenge remains usable during a slow mobile upload', () => {
+  const app=server(), data=app.signed(), parts=data.challenge.token.split('.');
+  parts[0]=String(Date.now()-30*60000);data.challenge.token=parts.join('.');
+  data.challenge.signature=crypto.createHmac('sha256',app.properties.get('challenge-secret')).update(data.challenge.token).digest('hex');
+  data.proof=0;while(!crypto.createHash('sha256').update(data.challenge.token+':'+data.proof).digest('hex').startsWith('000'))data.proof++;
+  assert.equal(app.post(data).success,true);
+});
+test('traversal, absolute, Windows, and symlink ZIP entries are rejected', () => {
+  for(const filename of ['../escape.txt','/absolute.txt','C:drive.txt','folder/../escape.txt','safe.txt']){
+    const name=Buffer.from(filename), local=Buffer.alloc(30), central=Buffer.alloc(46), end=Buffer.alloc(22);
+    local.writeUInt32LE(0x04034b50);local.writeUInt16LE(name.length,26);
+    central.writeUInt32LE(0x02014b50);central.writeUInt16LE(name.length,28);
+    if(filename==='safe.txt')central.writeUInt32LE(0xa000*65536,38);
+    end.writeUInt32LE(0x06054b50);end.writeUInt16LE(1,8);end.writeUInt16LE(1,10);end.writeUInt32LE(46+name.length,12);end.writeUInt32LE(30+name.length,16);
+    const zip=Buffer.concat([local,name,central,name,end]);
+    const app=server();assert.equal(app.post(app.signed({zipBase64:zip.toString('base64')})).success,false);
+    assert.equal(app.sent.length,0);
+  }
 });

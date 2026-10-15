@@ -1524,7 +1524,7 @@ function d2b(dataUrl){const p=dataUrl.split(',');const m=p[0].match(/:(.*?);/)[1
 function gExt(name){const e=name.split('.').pop().toLowerCase();return['jpg','jpeg','png','gif','webp','pdf','doc','docx'].includes(e)?e:'bin';}
 
 async function createZip(){
-  const zip=new JSZip(),nm=(data.fullname||'profile').replace(/\s+/g,'_'),ds=new Date().toISOString().slice(0,10);
+  const zip=new JSZip(),nm=(data.fullname||'profile').replace(/[<>:"/\\|?*\x00-\x20]/g,'_'),ds=new Date().toISOString().slice(0,10);
   const wordBlob=await generateWord();
   zip.file(`履歴書_${nm}_${ds}.docx`,wordBlob);
   const folder=zip.folder(`写真_${nm}`);
@@ -1549,14 +1549,21 @@ function mobileSave(blob,fname){
 }
 async function doDownloadZip(){
   showLoading();
-  try{const z=await createZip();const nm=(data.fullname||'profile').replace(/\s+/g,'_');mobileSave(z,`履歴書_${nm}_${new Date().toISOString().slice(0,10)}.zip`);hideLoading();showSuccess();}
+  try{const z=await createZip();const nm=(data.fullname||'profile').replace(/[<>:"/\\|?*\x00-\x20]/g,'_');mobileSave(z,`履歴書_${nm}_${new Date().toISOString().slice(0,10)}.zip`);hideLoading();showSuccess();}
   catch(e){hideLoading();alert('Error: '+e.message);console.error(e);}
 }
 // ★★★ QUAN TRỌNG: Dán URL Google Apps Script vào đây ★★★
 // Xem file "email-server-script.gs" để biết cách tạo URL
 const APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbyuaPHYIm4gsM0MazVEs7juHVwygZIAEb0REj7695DR68-P7wJv95khWmRR1iYwGv1NyA/exec';
 
-let emailInProgress=false;
+let emailInProgress=false,emailSubmissionId=null;
+function getEmailSubmissionId(){
+  if(emailSubmissionId)return emailSubmissionId;
+  try{emailSubmissionId=sessionStorage.getItem('yb-resume-submission');}catch(e){}
+  if(!emailSubmissionId)emailSubmissionId=crypto.randomUUID();
+  try{sessionStorage.setItem('yb-resume-submission',emailSubmissionId);}catch(e){}
+  return emailSubmissionId;
+}
 async function doEmailZip(){
   if(emailInProgress)return;
   emailInProgress=true;
@@ -1569,7 +1576,7 @@ async function doEmailZipOnce(){
     alert('⚠️ Chưa cấu hình email server!\nFile ZIP sẽ được tải về máy.');
     showLoading();
     try{
-      const z=await createZip();const nm=(data.fullname||'profile').replace(/\s+/g,'_');
+      const z=await createZip();const nm=(data.fullname||'profile').replace(/[<>:"/\\|?*\x00-\x20]/g,'_');
       mobileSave(z,`履歴書_${nm}_${new Date().toISOString().slice(0,10)}.zip`);
       hideLoading();showSuccess();
     }catch(e){hideLoading();alert('Error: '+e.message);}
@@ -1579,7 +1586,7 @@ async function doEmailZipOnce(){
   showLoading(t('sendingEmail')||'Đang gửi email...','📧');
   try{
     // Create ZIP once, generate base64 only (saves memory on mobile)
-    const zip=new JSZip(),nm=(data.fullname||'profile').replace(/\s+/g,'_'),ds=new Date().toISOString().slice(0,10);
+    const zip=new JSZip(),nm=(data.fullname||'profile').replace(/[<>:"/\\|?*\x00-\x20]/g,'_'),ds=new Date().toISOString().slice(0,10);
     const wordBlob=await generateWord();
     zip.file(`履歴書_${nm}_${ds}.docx`,wordBlob);
     const folder=zip.folder(`写真_${nm}`);
@@ -1610,7 +1617,7 @@ async function doEmailZipOnce(){
     // A single readable request; an unreadable response must never trigger a resend.
     let emailSent=false;
     try{
-      const challengeResponse=await fetch(APPS_SCRIPT_URL+'?action=challenge');
+      const challengeResponse=await fetch(APPS_SCRIPT_URL+'?action=challenge&submissionId='+encodeURIComponent(getEmailSubmissionId()));
       const issued=await challengeResponse.json();
       if(!challengeResponse.ok||!issued.success)throw new Error('Email service unavailable');
       const challenge=issued.challenge,encoder=new TextEncoder();
@@ -1650,14 +1657,14 @@ async function doEmailZipOnce(){
     hideLoading();
     console.error('Email error:',e);
     try{
-      const z=await createZip();const nm2=(data.fullname||'profile').replace(/\s+/g,'_');
+      const z=await createZip();const nm2=(data.fullname||'profile').replace(/[<>:"/\\|?*\x00-\x20]/g,'_');
       mobileSave(z,`履歴書_${nm2}_${new Date().toISOString().slice(0,10)}.zip`);
     }catch(e2){}
     alert(`⚠️ Không gửi được email (${e.message}).\n\n📎 File ZIP đã tải về máy.`);
   }
 }
 function showSuccess(){document.getElementById('reviewArea').classList.add('hidden');document.getElementById('successArea').classList.remove('hidden');}
-function restart(){data={};photoData=null;ocrDone=false;zairyuFront=[];zairyuBack=[];certFiles={certSenmon:[],certLicense:[],certJlpt:[],certTokutei:[],certOther:[]};eduRows=[{start:'',end:'',country:'home',detail:'',major:''}];workRows=[{start:'',end:'',country:'home',company:'',job:'',visa:''}];licRows=[{date:'',detail:''}];workExp=workExpInit();step=0;document.getElementById('successArea').classList.add('hidden');document.getElementById('welcomeScreen').classList.remove('hidden');document.getElementById('langSection').classList.remove('hidden');document.getElementById('progressSection').classList.add('hidden');document.getElementById('navButtons').classList.add('hidden');updateUI();}
+function restart(){emailSubmissionId=null;try{sessionStorage.removeItem('yb-resume-submission');}catch(e){}data={};photoData=null;ocrDone=false;zairyuFront=[];zairyuBack=[];certFiles={certSenmon:[],certLicense:[],certJlpt:[],certTokutei:[],certOther:[]};eduRows=[{start:'',end:'',country:'home',detail:'',major:''}];workRows=[{start:'',end:'',country:'home',company:'',job:'',visa:''}];licRows=[{date:'',detail:''}];workExp=workExpInit();step=0;document.getElementById('successArea').classList.add('hidden');document.getElementById('welcomeScreen').classList.remove('hidden');document.getElementById('langSection').classList.remove('hidden');document.getElementById('progressSection').classList.add('hidden');document.getElementById('navButtons').classList.add('hidden');updateUI();}
 </script>
 </body>
 </html>
