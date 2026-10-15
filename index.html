@@ -1222,9 +1222,6 @@ const JP_DICT=(function(){
   return d;
 })();
 
-// Lang code map for API
-const LANG_MAP={vi:'vi',ja:'ja',id:'id',km:'km',ne:'ne',mn:'mn',zh:'zh-CN',my:'my',th:'th',bn:'bn',si:'si'};
-
 // Google Translate (free gtx endpoint, no API key) \u2014 ch\u1EA5t l\u01B0\u1EE3ng cao cho c\u00E2u d\u00E0i
 async function gtxTranslate(text){
   const url=`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=ja&dt=t&q=${encodeURIComponent(text)}`;
@@ -1237,7 +1234,7 @@ async function gtxTranslate(text){
   }
   throw new Error('gtx empty');
 }
-// Translate text to Japanese: Google Translate \u2192 MyMemory \u2192 dictionary
+// Translate text to Japanese: exact dictionary matches, then Google Translate
 async function toJP(text){
   if(!text||!text.trim())return text;
   const trimmed=text.trim();
@@ -1252,26 +1249,8 @@ async function toJP(text){
   try{
     const g=await gtxTranslate(trimmed);
     if(g&&/[぀-ヿ㐀-鿿]/.test(g))return g;
-  }catch(e){console.log('Google translate failed, trying MyMemory:',(e&&e.message)||e);}
-  // 2) MyMemory API — fallback
-  try{
-    const lc=LANG_MAP[lang]||'vi';
-    const url=`https://api.mymemory.translated.net/get?q=${encodeURIComponent(trimmed)}&langpair=${lc}|ja`;
-    const resp=await fetch(url,{signal:AbortSignal.timeout(4000)});
-    const json=await resp.json();
-    if(json.responseStatus===200&&json.responseData&&json.responseData.translatedText){
-      const tr=json.responseData.translatedText;
-      if(tr&&tr!==trimmed&&!tr.includes('PLEASE SELECT'))return tr;
-    }
-  }catch(e){console.log('MyMemory unavailable:',(e&&e.message)||e);}
-  // 3) Dictionary word-by-word replace — last resort (offline)
-  let result=trimmed;
-  const sorted=Object.keys(JP_DICT).sort((a,b)=>b.length-a.length); // longest first
-  for(const key of sorted){
-    const re=new RegExp(key.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi');
-    result=result.replace(re,JP_DICT[key]);
-  }
-  if(result!==trimmed)return result;
+  }catch(e){console.log('Google translate failed, keeping original text:',(e&&e.message)||e);}
+  // Preserve free text when Google is unavailable; partial replacements can alter names.
   return trimmed;
 }
 
