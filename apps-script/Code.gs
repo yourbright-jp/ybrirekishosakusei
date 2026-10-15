@@ -101,6 +101,22 @@ function finish_(reservation,status) {
 // Check the central directory and every referenced local entry without inflating
 // untrusted compressed bytes. The frontend uses JSZip default STORE; reject
 // top-level compression so declared-size lies cannot hide an expansion bomb.
+function crc32_(bytes,start,end) {
+  var table=crc32_.table;
+  if(!table){
+    table=[];
+    for(var n=0;n<256;n++){
+      var c=n;
+      for(var k=0;k<8;k++)c=(c&1)?(0xedb88320^(c>>>1)):(c>>>1);
+      table[n]=c>>>0;
+    }
+    crc32_.table=table;
+  }
+  var crc=0xffffffff;
+  for(var i=start;i<end;i++)crc=table[(crc^(bytes[i]&255))&255]^(crc>>>8);
+  return (crc^0xffffffff)>>>0;
+}
+
 function validateZip_(bytes) {
   function u16(i) { return (bytes[i] & 255) + (bytes[i + 1] & 255) * 256; }
   function u32(i) { return u16(i) + u16(i + 2) * 65536; }
@@ -123,6 +139,8 @@ function validateZip_(bytes) {
         local + 30 + nameLength + u16(local + 28) + compressed > start ||
         u16(local + 8) !== method || u16(local + 6) !== u16(pos + 8) ||
         (!(u16(pos + 8) & 8) && (u32(local + 18) !== compressed || u32(local + 22) !== uncompressed || u32(local + 14) !== u32(pos + 16)))) fail();
+    var dataStart=local+30+nameLength+u16(local+28);
+    if(crc32_(bytes,dataStart,dataStart+compressed)!==u32(pos+16)) fail();
     if (!nameLength || nameLength > 4096) fail();
     var entryName = Utilities.newBlob(bytes.slice(pos + 46, pos + 46 + nameLength)).getDataAsString('UTF-8');
     function checkExtras(offset, length) {

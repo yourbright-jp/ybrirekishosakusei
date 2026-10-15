@@ -34,5 +34,15 @@ test('manual retry keeps exact timestamped archive, hash and submission ID after
   const app=client('network');await app.run();await app.run();assert.equal(app.generated,1);assert.equal(app.calls[0].body.submissionId,app.calls[2].body.submissionId);assert.equal(app.calls[0].body.payloadHash,app.calls[2].body.payloadHash);assert.equal(app.calls[1].body.payload,app.calls[3].body.payload);assert.equal(app.success,0);
 });
 test('editing clears cached bytes while restart clears the identity too',()=>{
-  assert.match(html,/function backToEdit\(\)\{emailPayloadCache=null;/);assert.match(html,/function restart\(\)\{emailPayloadCache=null;emailSubmissionId=null;/);assert.doesNotMatch(code,/no-cors|action=challenge|proof<=/);
+  assert.match(html,/function backToEdit\(\)\{resetEmailSubmission\(\);/);assert.match(html,/function restart\(\)\{resetEmailSubmission\(\);/);assert.match(html,/function resetEmailSubmission\(\)\{emailPayloadCache=null;emailSubmissionId=null;/);assert.doesNotMatch(code,/no-cors|action=challenge|proof<=/);
+});
+
+test('every advertised image extension preserves its supported ZIP extension',()=>{
+  const helper=html.match(/function gExt[^\n]*/)[0],context=vm.createContext({});vm.runInContext(helper,context);
+  for(const ext of ['jpg','jpeg','png','webp','gif','bmp','heic','heif','avif','tif','tiff','pdf','doc','docx'])assert.equal(context.gExt('attachment.'+ext),ext);
+});
+test('starting an edited submission clears the stored ID and cached archive',()=>{
+  const app=client('network');vm.runInContext("emailPayloadCache={fixture:true};emailSubmissionId='old'",app.context);let removed;
+  app.context.sessionStorage.removeItem=key=>{removed=key;};app.context.resetEmailSubmission();
+  assert.equal(vm.runInContext('emailPayloadCache',app.context),null);assert.equal(vm.runInContext('emailSubmissionId',app.context),null);assert.equal(removed,'yb-resume-submission');
 });

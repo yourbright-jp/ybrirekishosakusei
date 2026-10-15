@@ -1,15 +1,16 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),crypto=require('node:crypto');
 const {test}=require('node:test');
 const source=fs.readFileSync(path.resolve(__dirname,'../apps-script/Code.gs'),'utf8');
+function crc32(bytes){let crc=0xffffffff;for(const byte of bytes){crc^=byte;for(let bit=0;bit<8;bit++)crc=(crc&1)?(0xedb88320^(crc>>>1)):(crc>>>1);}return (crc^0xffffffff)>>>0;}
 function zip(entries=[{name:'履歴書_TEST.docx'}]){
   const locals=[],centrals=[];let offset=0;
   for(const entry of entries){
-    const name=Buffer.from(entry.name),body=Buffer.from(entry.body||'synthetic test fixture'),method=entry.method||0;
+    const name=Buffer.from(entry.name),body=Buffer.from(entry.body??(entry.name.endsWith('/')?'':'synthetic test fixture')),method=entry.method||0;
     let extra=Buffer.alloc(0);
     if(entry.unicode){const unicode=Buffer.from(entry.unicode);extra=Buffer.alloc(9+unicode.length);extra.writeUInt16LE(0x7075);extra.writeUInt16LE(5+unicode.length,2);extra[4]=1;unicode.copy(extra,9);}
     const local=Buffer.alloc(30),central=Buffer.alloc(46);
-    local.writeUInt32LE(0x04034b50);local.writeUInt16LE(method,8);local.writeUInt32LE(body.length,18);local.writeUInt32LE(body.length,22);local.writeUInt16LE(name.length,26);local.writeUInt16LE(extra.length,28);
-    central.writeUInt32LE(0x02014b50);central.writeUInt16LE(method,10);central.writeUInt32LE(body.length,20);central.writeUInt32LE(body.length,24);central.writeUInt16LE(name.length,28);central.writeUInt16LE(extra.length,30);central.writeUInt32LE(offset,42);
+    local.writeUInt32LE(0x04034b50);local.writeUInt32LE(crc32(body),14);local.writeUInt16LE(method,8);local.writeUInt32LE(body.length,18);local.writeUInt32LE(body.length,22);local.writeUInt16LE(name.length,26);local.writeUInt16LE(extra.length,28);
+    central.writeUInt32LE(0x02014b50);central.writeUInt32LE(crc32(body),16);central.writeUInt16LE(method,10);central.writeUInt32LE(body.length,20);central.writeUInt32LE(body.length,24);central.writeUInt16LE(name.length,28);central.writeUInt16LE(extra.length,30);central.writeUInt32LE(offset,42);
     if(entry.mode)central.writeUInt32LE(entry.mode*65536,38);
     const bytes=Buffer.concat([local,name,extra,body]);locals.push(bytes);centrals.push(central,name,extra);offset+=bytes.length;
   }
@@ -97,4 +98,9 @@ test('traversal, symlinks, compression and alternate Unicode names are rejected'
 test('unsupported actions, malformed JSON and oversized verification fail closed',()=>{
   const app=server();for(const data of [null,[],{}, {action:'translate'}, {action:'verify',padding:'x'.repeat(8192)}])assert.equal(app.post(data).success,false);
   assert.equal(JSON.parse(app.context.doPost({postData:{contents:'{'}}).getContent()).success,false);assert.equal(app.sent.length,0);
+});
+
+test('stored entry data must match the CRC even when both headers agree',()=>{
+  const bytes=zip(),end=bytes.length-22,central=bytes.readUInt32LE(end+16);bytes.writeUInt32LE(0,14);bytes.writeUInt32LE(0,central+16);
+  const app=server();assert.equal(app.post(app.signed({zipBase64:bytes.toString('base64')})).success,false);assert.equal(app.sent.length,0);
 });
