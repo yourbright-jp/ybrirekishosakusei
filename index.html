@@ -1554,9 +1554,15 @@ async function doDownloadZip(){
 }
 // ★★★ QUAN TRỌNG: Dán URL Google Apps Script vào đây ★★★
 // Xem file "email-server-script.gs" để biết cách tạo URL
-const APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbzzU0w3VPyVZ09lnEgPwgSEB0kwFV-HpXxsa5rA5RAx1BUSP-uMb4ZzJJHMVpL5ioE2Nw/exec';
+const APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbyuaPHYIm4gsM0MazVEs7juHVwygZIAEb0REj7695DR68-P7wJv95khWmRR1iYwGv1NyA/exec';
 
+let emailInProgress=false;
 async function doEmailZip(){
+  if(emailInProgress)return;
+  emailInProgress=true;
+  try{await doEmailZipOnce();}finally{emailInProgress=false;}
+}
+async function doEmailZipOnce(){
   const sel=getSelectedEmails();if(!sel.length){alert('Please select email!');return;}
 
   if(!APPS_SCRIPT_URL){
@@ -1598,55 +1604,32 @@ async function doEmailZip(){
       }catch(e0){}
       hideLoading();
       alert('⚠️ '+(t('emailTooBig')||'File quá lớn để gửi qua email.')+`\n(${zipMB.toFixed(1)}MB / 20MB)`);
-      showSuccess();return;
+      return;
     }
 
-    // Send via Google Apps Script (no-cors mode for mobile compatibility)
+    // A single readable request; an unreadable response must never trigger a resend.
     let emailSent=false;
     try{
+      const challengeResponse=await fetch(APPS_SCRIPT_URL+'?action=challenge');
+      const issued=await challengeResponse.json();
+      if(!challengeResponse.ok||!issued.success)throw new Error('Email service unavailable');
+      const challenge=issued.challenge,encoder=new TextEncoder();
+      let proof=0;
+      for(;proof<=2000000;proof++){
+        const hash=new Uint8Array(await crypto.subtle.digest('SHA-256',encoder.encode(challenge.token+':'+proof)));
+        if(hash[0]===0&&(hash[1]&240)===0)break;
+      }
+      if(proof>2000000)throw new Error('Submission check failed');
       const resp=await fetch(APPS_SCRIPT_URL,{
-        method:'POST',
-        headers:{'Content-Type':'text/plain'},
-        redirect:'follow',
-        body:JSON.stringify({
-          emails:sel,
-          fullname:data.fullname||'',
-          furigana:data.furigana||'',
-          nationality:data.nationality||'',
-          visa:data.visa||'',
-          phone:data.phone||'',
-          email:data.email||'',
-          zipBase64:zipBase64,
-          fileName:fname
-        })
+        method:'POST',headers:{'Content-Type':'text/plain'},redirect:'follow',
+        body:JSON.stringify({challenge,proof,fullname:data.fullname||'',furigana:data.furigana||'',
+          nationality:data.nationality||'',visa:data.visa||'',phone:data.phone||'',email:data.email||'',
+          zipBase64,fileName:fname})
       });
-      let result;
-      try{result=await resp.json();}catch(e){result={success:resp.ok};}
-      emailSent=result.success;
-      if(!emailSent)console.error('Apps Script error:',result);
-    }catch(fetchErr){
-      console.error('Fetch error:',fetchErr);
-      // Try no-cors as fallback (can't read response but request may succeed)
-      try{
-        await fetch(APPS_SCRIPT_URL,{
-          method:'POST',
-          mode:'no-cors',
-          headers:{'Content-Type':'text/plain'},
-          body:JSON.stringify({
-            emails:sel,
-            fullname:data.fullname||'',
-            furigana:data.furigana||'',
-            nationality:data.nationality||'',
-            visa:data.visa||'',
-            phone:data.phone||'',
-            email:data.email||'',
-            zipBase64:zipBase64,
-            fileName:fname
-          })
-        });
-        emailSent='maybe';// no-cors: không đọc được kết quả — chưa chắc đã gửi thành công
-      }catch(e2){console.error('no-cors also failed:',e2);}
-    }
+      const result=await resp.json();
+      emailSent=resp.ok&&result.success===true;
+      if(!emailSent)console.error('Email delivery not confirmed:',result.error);
+    }catch(fetchErr){console.error('Email delivery not confirmed:',fetchErr);}
 
     // Save locally as backup (convert base64 back to blob for download)
     try{
@@ -1658,12 +1641,11 @@ async function doEmailZip(){
     hideLoading();
     if(emailSent===true){
       alert(`✅ Email đã gửi thành công!\n\n📧 Đã gửi đến:\n${sel.join('\n')}\n\n📎 File ${fname} cũng đã tải về máy.`);
-    }else if(emailSent==='maybe'){
-      alert('📧 '+(t('emailMaybe')||'Đã gửi yêu cầu email. Vui lòng kiểm tra hộp thư sau vài phút. File ZIP cũng đã tải về máy.'));
+
     }else{
       alert(`⚠️ Gửi email có thể thất bại.\n\n📎 File ZIP đã tải về máy.\nVui lòng kiểm tra email.`);
     }
-    showSuccess();
+    if(emailSent)showSuccess();
   }catch(e){
     hideLoading();
     console.error('Email error:',e);
@@ -1672,7 +1654,6 @@ async function doEmailZip(){
       mobileSave(z,`履歴書_${nm2}_${new Date().toISOString().slice(0,10)}.zip`);
     }catch(e2){}
     alert(`⚠️ Không gửi được email (${e.message}).\n\n📎 File ZIP đã tải về máy.`);
-    showSuccess();
   }
 }
 function showSuccess(){document.getElementById('reviewArea').classList.add('hidden');document.getElementById('successArea').classList.remove('hidden');}
