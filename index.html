@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>YourBright - 履歴書</title>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 <script>
 // Robust async library loader with multiple CDN fallbacks
 (function(){
@@ -574,13 +575,13 @@ function buildZairyu(){
   // Front
   h+=`<div class="upload-card ${zairyuFront.length?'has-file':''}">
     ${zairyuFront.length?zairyuFront.map(f=>f.data.startsWith('data:image/')?`<img src="${f.data}">`:`<span class="file-tag">📎 ${f.name}</span>`).join('')+`<div class="upload-status">${t('zairyuFront')} - ${t('uploaded')} (${zairyuFront.length})</div>`:`<div class="upload-icon">🪪</div><div class="upload-label">${t('zairyuFront')}</div>`}
-    <input type="file" id="zf_front" accept="image/*,.pdf,.doc,.docx" multiple style="display:none" onchange="onZairyu('front',this)">
+    <input type="file" id="zf_front" accept=".jpg,.jpeg,.png,.webp,.gif,.bmp,.heic,.heif,.avif,.tif,.tiff,.pdf,.doc,.docx" multiple style="display:none" onchange="onZairyu('front',this)">
     <button class="upload-btn" onclick="event.stopPropagation();document.getElementById('zf_front').click()">${t('uploadClick')}</button>
   </div>`;
   // Back
   h+=`<div class="upload-card ${zairyuBack.length?'has-file':''}">
     ${zairyuBack.length?zairyuBack.map(f=>f.data.startsWith('data:image/')?`<img src="${f.data}">`:`<span class="file-tag">📎 ${f.name}</span>`).join('')+`<div class="upload-status">${t('zairyuBack')} - ${t('uploaded')} (${zairyuBack.length})</div>`:`<div class="upload-icon">🪪</div><div class="upload-label">${t('zairyuBack')}</div>`}
-    <input type="file" id="zf_back" accept="image/*,.pdf,.doc,.docx" multiple style="display:none" onchange="onZairyu('back',this)">
+    <input type="file" id="zf_back" accept=".jpg,.jpeg,.png,.webp,.gif,.bmp,.heic,.heif,.avif,.tif,.tiff,.pdf,.doc,.docx" multiple style="display:none" onchange="onZairyu('back',this)">
     <button class="upload-btn" onclick="event.stopPropagation();document.getElementById('zf_back').click()">${t('uploadClick')}</button>
   </div></div>`;
   return h;
@@ -973,7 +974,7 @@ function buildCerts(){
     const arr=certFiles[c.key]||[];
     h+=`<div class="upload-card ${arr.length?'has-file':''}">
       ${arr.length?arr.map(f=>f.data.startsWith('data:image/')?`<img src="${f.data}">`:`<span class="file-tag">📎 ${f.name}</span>`).join('')+`<div class="upload-status">${t(c.key)} (${arr.length})</div>`:`<div class="upload-icon">${c.icon}</div><div class="upload-label">${t(c.key)}</div>`}
-      <input type="file" id="cf_${c.key}" accept="image/*,.pdf,.doc,.docx" multiple style="display:none" onchange="onCert('${c.key}',this)">
+      <input type="file" id="cf_${c.key}" accept=".jpg,.jpeg,.png,.webp,.gif,.bmp,.heic,.heif,.avif,.tif,.tiff,.pdf,.doc,.docx" multiple style="display:none" onchange="onCert('${c.key}',this)">
       <button class="upload-btn" onclick="event.stopPropagation();document.getElementById('cf_${c.key}').click()">${t('uploadClick')}</button>
     </div>`;
   });
@@ -1149,7 +1150,7 @@ function showReview(){
   let ec=emails.map((e,i)=>`<div class="email-item"><input type="checkbox" id="em_${i}" value="${e}" checked><label for="em_${i}">${e}</label></div>`).join('');
   ra.innerHTML=`<h2 style="color:#1a237e;margin-bottom:4px">${t('reviewT')}</h2><p style="color:#888;font-size:11px;margin-bottom:10px">${t('reviewD')}</p><div style="max-height:400px;overflow-y:auto"><table class="review-table">${rows}</table></div><h3 style="color:#1a237e;margin-top:18px;margin-bottom:6px">📧 ${t('emailT')}</h3><div class="email-list">${ec}</div><div class="final-actions"><button class="btn-action" style="background:#f0f0f0;color:#555" onclick="backToEdit()">← ${t('prev')}</button><button class="btn-action btn-download" onclick="doDownloadZip()">📥 ${t('download')}</button><button class="btn-action btn-email" onclick="doEmailZip()">📧 ${t('sendEmail')}</button></div>`;
 }
-function backToEdit(){document.getElementById('reviewArea').classList.add('hidden');document.getElementById('questionArea').classList.remove('hidden');document.getElementById('navButtons').classList.remove('hidden');document.getElementById('progressSection').classList.remove('hidden');step=TOTAL-1;showStep();}
+function backToEdit(){emailPayloadCache=null;document.getElementById('reviewArea').classList.add('hidden');document.getElementById('questionArea').classList.remove('hidden');document.getElementById('navButtons').classList.remove('hidden');document.getElementById('progressSection').classList.remove('hidden');step=TOTAL-1;showStep();}
 function getSelectedEmails(){return emails.filter((_,i)=>{const cb=document.getElementById(`em_${i}`);return cb&&cb.checked;});}
 
 // =========================================================
@@ -1556,7 +1557,8 @@ async function doDownloadZip(){
 // Xem file "email-server-script.gs" để biết cách tạo URL
 const APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbyuaPHYIm4gsM0MazVEs7juHVwygZIAEb0REj7695DR68-P7wJv95khWmRR1iYwGv1NyA/exec';
 
-let emailInProgress=false,emailSubmissionId=null;
+const EMAIL_SITE_KEY='0x4AAAAAAFXVSXrqdslfzZEA';
+let emailInProgress=false,emailSubmissionId=null,emailPayloadCache=null;
 function getEmailSubmissionId(){
   if(emailSubmissionId)return emailSubmissionId;
   try{emailSubmissionId=sessionStorage.getItem('yb-resume-submission');}catch(e){}
@@ -1564,107 +1566,107 @@ function getEmailSubmissionId(){
   try{sessionStorage.setItem('yb-resume-submission',emailSubmissionId);}catch(e){}
   return emailSubmissionId;
 }
+async function requestEmailVerification(binding){
+  // The verification token is single-use. Render only after generating the ZIP,
+  // and obtain a fresh token on an explicit retry of the same cached payload.
+  const started=Date.now();
+  while(!window.turnstile){
+    if(Date.now()-started>20000)throw new Error('Verification unavailable. Please try again.');
+    await new Promise(resolve=>setTimeout(resolve,100));
+  }
+  hideLoading();
+  return new Promise((resolve,reject)=>{
+    const overlay=document.createElement('div');
+    overlay.className='loading-overlay';overlay.style.zIndex='10000';
+    const card=document.createElement('div');
+    card.style.cssText='background:white;border-radius:16px;padding:24px;max-width:95vw;text-align:center;color:#333';
+    const title=document.createElement('p');title.textContent='送信前の確認 / Verify before sending';
+    const container=document.createElement('div'),cancel=document.createElement('button');
+    cancel.className='btn-action';cancel.textContent='キャンセル / Cancel';
+    card.append(title,container,cancel);overlay.append(card);document.body.append(overlay);
+    let widget,timer,done=false;
+    function finish(error,token){
+      if(done)return;done=true;clearTimeout(timer);
+      if(widget!==undefined)window.turnstile.remove(widget);
+      overlay.remove();error?reject(error):resolve(token);
+    }
+    cancel.onclick=()=>finish(new Error('Sending cancelled.'));
+    timer=setTimeout(()=>finish(new Error('Verification timed out. Please try again.')),120000);
+    try{widget=window.turnstile.render(container,{
+      sitekey:EMAIL_SITE_KEY,action:'resume-mail',cData:binding,
+      callback:token=>finish(null,token),
+      'error-callback':()=>finish(new Error('Verification failed. Please try again.')),
+      'expired-callback':()=>finish(new Error('Verification expired. Please try again.'))
+    });}catch(error){finish(error);}
+  });
+}
+async function prepareEmailPayload(){
+  if(emailPayloadCache)return emailPayloadCache;
+  const zip=new JSZip(),nm=(data.fullname||'profile').replace(/[<>:"/\\|?*\x00-\x20]/g,'_'),ds=new Date().toISOString().slice(0,10);
+  zip.file('履歴書_'+nm+'_'+ds+'.docx',await generateWord());
+  const folder=zip.folder('写真_'+nm);
+  if(photoData)folder.file('証明写真_3x4.jpg',d2b(photoData));
+  zairyuFront.forEach((f,i)=>folder.file('在留カード_表_'+(i+1)+'.'+gExt(f.name),d2b(f.data)));
+  zairyuBack.forEach((f,i)=>folder.file('在留カード_裏_'+(i+1)+'.'+gExt(f.name),d2b(f.data)));
+  const certNames={certSenmon:'専門級',certLicense:'運転免許',certJlpt:'日本語_JLPT',certTokutei:'特定技能',certOther:'その他'};
+  Object.entries(certFiles).forEach(([k,arr])=>arr.forEach((f,i)=>folder.file((certNames[k]||k)+'_'+(i+1)+'.'+gExt(f.name),d2b(f.data))));
+  const zipBase64=await zip.generateAsync({type:'base64',compression:'STORE'});
+  const fileName='履歴書_'+nm+'_'+ds+'.zip';
+  if(zipBase64.length*3/4>20*1024*1024)throw new Error('File exceeds 20 MB. Download the ZIP and contact staff.');
+  const payload=JSON.stringify({fullname:data.fullname||'',furigana:data.furigana||'',
+    nationality:data.nationality||'',visa:data.visa||'',phone:data.phone||'',email:data.email||'',zipBase64,fileName});
+  const digest=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(payload)));
+  const hash=Array.from(digest,b=>b.toString(16).padStart(2,'0')).join('');
+  emailPayloadCache={payload,hash,zipBase64,fileName};
+  return emailPayloadCache;
+}
 async function doEmailZip(){
   if(emailInProgress)return;
   emailInProgress=true;
   try{await doEmailZipOnce();}finally{emailInProgress=false;}
 }
 async function doEmailZipOnce(){
-  const sel=getSelectedEmails();if(!sel.length){alert('Please select email!');return;}
-
-  if(!APPS_SCRIPT_URL){
-    alert('⚠️ Chưa cấu hình email server!\nFile ZIP sẽ được tải về máy.');
-    showLoading();
-    try{
-      const z=await createZip();const nm=(data.fullname||'profile').replace(/[<>:"/\\|?*\x00-\x20]/g,'_');
-      mobileSave(z,`履歴書_${nm}_${new Date().toISOString().slice(0,10)}.zip`);
-      hideLoading();showSuccess();
-    }catch(e){hideLoading();alert('Error: '+e.message);}
-    return;
-  }
-
-  showLoading(t('sendingEmail')||'Đang gửi email...','📧');
+  if(!getSelectedEmails().length){alert('Please select email!');return;}
+  showLoading(t('sendingEmail')||'Sending email...','📧');
+  let archive;
   try{
-    // Create ZIP once, generate base64 only (saves memory on mobile)
-    const zip=new JSZip(),nm=(data.fullname||'profile').replace(/[<>:"/\\|?*\x00-\x20]/g,'_'),ds=new Date().toISOString().slice(0,10);
-    const wordBlob=await generateWord();
-    zip.file(`履歴書_${nm}_${ds}.docx`,wordBlob);
-    const folder=zip.folder(`写真_${nm}`);
-    if(photoData)folder.file(`証明写真_3x4.jpg`,d2b(photoData));
-    zairyuFront.forEach((f,i)=>folder.file(`在留カード_表_${i+1}.${gExt(f.name)}`,d2b(f.data)));
-    zairyuBack.forEach((f,i)=>folder.file(`在留カード_裏_${i+1}.${gExt(f.name)}`,d2b(f.data)));
-    const certNames={certSenmon:'専門級',certLicense:'運転免許',certJlpt:'日本語_JLPT',certTokutei:'特定技能',certOther:'その他'};
-    Object.entries(certFiles).forEach(([k,arr])=>{arr.forEach((f,i)=>folder.file(`${certNames[k]||k}_${i+1}.${gExt(f.name)}`,d2b(f.data)));});
-
-    const fname=`履歴書_${nm}_${ds}.zip`;
-
-    // Generate base64 for email (single generation to save memory)
-    const zipBase64=await zip.generateAsync({type:'base64'});
-
-    // Size guard: Apps Script/Gmail giới hạn ~25MB đính kèm → chặn ở 20MB
-    const zipMB=zipBase64.length*3/4/1048576;
-    if(zipMB>20){
+    archive=await prepareEmailPayload();
+    const submissionId=getEmailSubmissionId();
+    const token=await requestEmailVerification(submissionId+'_'+archive.hash);
+    showLoading(t('sendingEmail')||'Sending email...','📧');
+    const verification=await fetch(APPS_SCRIPT_URL,{
+      method:'POST',headers:{'Content-Type':'text/plain'},redirect:'follow',
+      body:JSON.stringify({action:'verify',submissionId,payloadHash:archive.hash,token})
+    });
+    const issued=await verification.json();
+    if(!verification.ok||issued.success!==true||!issued.ticket)throw new Error('Verification failed. Please try again.');
+    // Never automatically retry an unreadable or uncertain send response.
+    const response=await fetch(APPS_SCRIPT_URL,{
+      method:'POST',headers:{'Content-Type':'text/plain'},redirect:'follow',
+      body:JSON.stringify({ticket:issued.ticket,payload:archive.payload})
+    });
+    const result=await response.json();
+    if(!response.ok||result.success!==true)throw new Error(result.error||'Delivery is unconfirmed. Contact staff.');
+    hideLoading();
+    alert('✅ 送信しました / Email sent\n📧 staff@yourbright.co.jp');
+    showSuccess();
+  }catch(error){
+    hideLoading();console.error('Email delivery not confirmed:',error);
+    alert('⚠️ 送信を確認できません / Delivery unconfirmed.\n'+error.message+'\nZIPを保存して staff@yourbright.co.jp にご連絡ください。');
+  }finally{
+    // Keep the exact bytes in memory until editing/restart. ZIP timestamps must
+    // not create a different payload when retrying after a lost response.
+    if(archive){
       try{
-        const raw0=atob(zipBase64);const arr0=new Uint8Array(raw0.length);
-        for(let i=0;i<raw0.length;i++)arr0[i]=raw0.charCodeAt(i);
-        mobileSave(new Blob([arr0],{type:'application/zip'}),fname);
-      }catch(e0){}
-      hideLoading();
-      alert('⚠️ '+(t('emailTooBig')||'File quá lớn để gửi qua email.')+`\n(${zipMB.toFixed(1)}MB / 20MB)`);
-      return;
+        const raw=atob(archive.zipBase64),bytes=new Uint8Array(raw.length);
+        for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);
+        mobileSave(new Blob([bytes],{type:'application/zip'}),archive.fileName);
+      }catch(error){console.error('Download error:',error);}
     }
-
-    // A single readable request; an unreadable response must never trigger a resend.
-    let emailSent=false;
-    try{
-      const challengeResponse=await fetch(APPS_SCRIPT_URL+'?action=challenge&submissionId='+encodeURIComponent(getEmailSubmissionId()));
-      const issued=await challengeResponse.json();
-      if(!challengeResponse.ok||!issued.success)throw new Error('Email service unavailable');
-      const challenge=issued.challenge,encoder=new TextEncoder();
-      let proof=0;
-      for(;proof<=2000000;proof++){
-        const hash=new Uint8Array(await crypto.subtle.digest('SHA-256',encoder.encode(challenge.token+':'+proof)));
-        if(hash[0]===0&&(hash[1]&240)===0)break;
-      }
-      if(proof>2000000)throw new Error('Submission check failed');
-      const resp=await fetch(APPS_SCRIPT_URL,{
-        method:'POST',headers:{'Content-Type':'text/plain'},redirect:'follow',
-        body:JSON.stringify({challenge,proof,fullname:data.fullname||'',furigana:data.furigana||'',
-          nationality:data.nationality||'',visa:data.visa||'',phone:data.phone||'',email:data.email||'',
-          zipBase64,fileName:fname})
-      });
-      const result=await resp.json();
-      emailSent=resp.ok&&result.success===true;
-      if(!emailSent)console.error('Email delivery not confirmed:',result.error);
-    }catch(fetchErr){console.error('Email delivery not confirmed:',fetchErr);}
-
-    // Save locally as backup (convert base64 back to blob for download)
-    try{
-      const raw=atob(zipBase64);const arr=new Uint8Array(raw.length);
-      for(let i=0;i<raw.length;i++)arr[i]=raw.charCodeAt(i);
-      mobileSave(new Blob([arr],{type:'application/zip'}),fname);
-    }catch(dlErr){console.error('Download error:',dlErr);}
-
-    hideLoading();
-    if(emailSent===true){
-      alert(`✅ Email đã gửi thành công!\n\n📧 Đã gửi đến:\n${sel.join('\n')}\n\n📎 File ${fname} cũng đã tải về máy.`);
-
-    }else{
-      alert(`⚠️ Gửi email có thể thất bại.\n\n📎 File ZIP đã tải về máy.\nVui lòng kiểm tra email.`);
-    }
-    if(emailSent)showSuccess();
-  }catch(e){
-    hideLoading();
-    console.error('Email error:',e);
-    try{
-      const z=await createZip();const nm2=(data.fullname||'profile').replace(/[<>:"/\\|?*\x00-\x20]/g,'_');
-      mobileSave(z,`履歴書_${nm2}_${new Date().toISOString().slice(0,10)}.zip`);
-    }catch(e2){}
-    alert(`⚠️ Không gửi được email (${e.message}).\n\n📎 File ZIP đã tải về máy.`);
   }
 }
 function showSuccess(){document.getElementById('reviewArea').classList.add('hidden');document.getElementById('successArea').classList.remove('hidden');}
-function restart(){emailSubmissionId=null;try{sessionStorage.removeItem('yb-resume-submission');}catch(e){}data={};photoData=null;ocrDone=false;zairyuFront=[];zairyuBack=[];certFiles={certSenmon:[],certLicense:[],certJlpt:[],certTokutei:[],certOther:[]};eduRows=[{start:'',end:'',country:'home',detail:'',major:''}];workRows=[{start:'',end:'',country:'home',company:'',job:'',visa:''}];licRows=[{date:'',detail:''}];workExp=workExpInit();step=0;document.getElementById('successArea').classList.add('hidden');document.getElementById('welcomeScreen').classList.remove('hidden');document.getElementById('langSection').classList.remove('hidden');document.getElementById('progressSection').classList.add('hidden');document.getElementById('navButtons').classList.add('hidden');updateUI();}
+function restart(){emailPayloadCache=null;emailSubmissionId=null;try{sessionStorage.removeItem('yb-resume-submission');}catch(e){}data={};photoData=null;ocrDone=false;zairyuFront=[];zairyuBack=[];certFiles={certSenmon:[],certLicense:[],certJlpt:[],certTokutei:[],certOther:[]};eduRows=[{start:'',end:'',country:'home',detail:'',major:''}];workRows=[{start:'',end:'',country:'home',company:'',job:'',visa:''}];licRows=[{date:'',detail:''}];workExp=workExpInit();step=0;document.getElementById('successArea').classList.add('hidden');document.getElementById('welcomeScreen').classList.remove('hidden');document.getElementById('langSection').classList.remove('hidden');document.getElementById('progressSection').classList.add('hidden');document.getElementById('navButtons').classList.add('hidden');updateUI();}
 </script>
 </body>
 </html>

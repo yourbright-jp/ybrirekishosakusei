@@ -1,84 +1,101 @@
-// YourBright resume email server. Deploy as yamashita.hayato@yourbright.co.jp.
-// Only the send-mail scope is required; the script cannot read the Gmail inbox.
+// Deploy as yamashita.hayato@yourbright.co.jp. Recipient is fixed server-side.
 var RESUME_RECIPIENT = 'staff@yourbright.co.jp';
-var RESUME_VERSION = '2026-10-15';
+var RESUME_VERSION = '2026-10-15-turnstile-v1';
 var MAX_ZIP_BYTES = 20 * 1024 * 1024;
+var MAX_REQUEST_CHARS = 29 * 1024 * 1024;
+var TURNSTILE_HOSTNAME = 'yourbright-jp.github.io';
+var TURNSTILE_ACTION = 'resume-mail';
 
 function jsonResponse_(value) {
-  return ContentService.createTextOutput(JSON.stringify(value))
-    .setMimeType(ContentService.MimeType.JSON);
+  return ContentService.createTextOutput(JSON.stringify(value)).setMimeType(ContentService.MimeType.JSON);
 }
-
-function doGet(e) {
-  if (e && e.parameter && e.parameter.action === 'challenge') return jsonResponse_({success: true, challenge: challenge_(e.parameter.submissionId)});
-  return jsonResponse_({success: true, service: 'yourbright-rirekisho-email', version: RESUME_VERSION});
+function doGet() {
+  return jsonResponse_({success: true, service: 'yourbright-rirekisho-email', version: RESUME_VERSION,
+    configured: !!PropertiesService.getScriptProperties().getProperty('TURNSTILE_SECRET')});
 }
-
 function escapeHtml_(value) {
-  return String(value).replace(/[&<>"']/g, function (character) {
-    return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character];
+  return String(value).replace(/[&<>"']/g, function (c) {
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
   });
 }
-
-// A signed, two-hour, single-use proof-of-work challenge adds bot cost without
-// requiring an applicant login. Persistent limits protect the sender quota.
-function hex_(bytes) { return bytes.map(function (b) { return ('0' + (b & 255).toString(16)).slice(-2); }).join(''); }
-function digest_(value) { return hex_(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, value, Utilities.Charset.UTF_8)); }
-function challenge_(submissionId) {
-  submissionId = submissionId || Utilities.getUuid();
-  if (!/^[a-f0-9-]{36}$/.test(submissionId)) throw new Error('Invalid submission ID.');
-  var props = PropertiesService.getScriptProperties(), secret = props.getProperty('challenge-secret');
-  // Established challenges never take the mail-send lock. Only initialize once.
-  if (!secret) {
-    var lock = LockService.getScriptLock(); lock.waitLock(10000);
-    try {
-      secret = props.getProperty('challenge-secret');
-      if (!secret) { secret = Utilities.getUuid() + Utilities.getUuid(); props.setProperty('challenge-secret', secret); }
-    } finally { lock.releaseLock(); }
-  }
-  var token = Date.now() + '.' + submissionId + '.' + Utilities.getUuid();
-  return {token: token, signature: hex_(Utilities.computeHmacSha256Signature(token, secret)), prefix: '000'};
+function hex_(bytes) { return bytes.map(function (b) { return ('0'+(b&255).toString(16)).slice(-2); }).join(''); }
+function digest_(text) { return hex_(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,text,Utilities.Charset.UTF_8)); }
+function equal_(a,b) {
+  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+  var difference=0; for(var i=0;i<a.length;i++) difference|=a.charCodeAt(i)^b.charCodeAt(i);
+  return difference===0;
 }
-function verifyChallenge_(data) {
-  var c = data.challenge;
-  if (!c || typeof c.token !== 'string' || !/^\d{13}\.[a-f0-9-]{36}\.[a-f0-9-]{36}$/.test(c.token) ||
-      typeof c.signature !== 'string' || !/^[a-f0-9]{64}$/.test(c.signature) ||
-      !Number.isInteger(data.proof) || data.proof < 0 || data.proof > 2000000) throw new Error('Invalid submission challenge.');
-  var age = Date.now() - Number(c.token.split('.')[0]);
-  var secret = PropertiesService.getScriptProperties().getProperty('challenge-secret');
-  if (age < 0 || age > 7200000 || !secret ||
-      hex_(Utilities.computeHmacSha256Signature(c.token, secret)) !== c.signature ||
-      digest_(c.token + ':' + data.proof).slice(0, 3) !== '000') throw new Error('Submission challenge expired or invalid.');
-}
-function sendOnce_(data, send) {
-  verifyChallenge_(data);
-  var lock = LockService.getScriptLock(); lock.waitLock(10000);
+function ticketSecret_() {
+  var props=PropertiesService.getScriptProperties(), secret=props.getProperty('ticket-secret');
+  if (secret) return secret;
+  var lock=LockService.getScriptLock(); lock.waitLock(10000);
   try {
-    var props = PropertiesService.getScriptProperties(), now = Date.now();
-    var key = 'submission:' + data.challenge.token.split('.')[1];
-    var fingerprint = digest_(JSON.stringify([data.zipBase64, data.fullname, data.furigana, data.nationality, data.visa, data.phone, data.email, data.fileName]));
-    var previous = props.getProperty(key);
-    if (previous) {
-      var receipt = JSON.parse(previous);
-      if (receipt.hash !== fingerprint) throw new Error('Submission already used with different content.');
-      if (receipt.status !== 'sent') throw new Error('Delivery is unconfirmed. Check with staff before sending again.');
-      return;
-    }
-    var all = props.getProperties(), hourCount = 0, dayCount = 0;
-    Object.keys(all).forEach(function (name) {
-      if (name.indexOf('submission:') !== 0) return;
-      var row = JSON.parse(all[name]);
-      if (now - row.time > 7 * 86400000) { props.deleteProperty(name); return; }
-      if (now - row.time >= 86400000) return;
-      dayCount++; if (now - row.time < 3600000) hourCount++;
-    });
-    if (hourCount >= 30 || dayCount >= 100 || MailApp.getRemainingDailyQuota() < 250) throw new Error('Email limit reached. Download the ZIP and contact staff.');
-    // Record before contacting the provider: uncertain failures must never retry a send.
-    var record = {time: now, hash: fingerprint, status: 'pending'};
-    props.setProperty(key, JSON.stringify(record));
-    send();
-    record.status = 'sent'; props.setProperty(key, JSON.stringify(record));
+    secret=props.getProperty('ticket-secret');
+    if (!secret) { secret=Utilities.getUuid()+Utilities.getUuid(); props.setProperty('ticket-secret',secret); }
+    return secret;
   } finally { lock.releaseLock(); }
+}
+// Verify the small browser proof before the large ZIP upload. The signed ticket
+// binds an exact cached payload and allows two hours for a slow mobile upload.
+function issueTicket_(data) {
+  if (typeof data.submissionId !== 'string' || !/^[a-f0-9-]{36}$/.test(data.submissionId) ||
+      typeof data.payloadHash !== 'string' || !/^[a-f0-9]{64}$/.test(data.payloadHash) ||
+      typeof data.token !== 'string' || !data.token || data.token.length>2048) throw new Error('Invalid verification request.');
+  var secret=PropertiesService.getScriptProperties().getProperty('TURNSTILE_SECRET');
+  if (!secret) throw new Error('Email verification is not configured.');
+  var result;
+  try {
+    var response=UrlFetchApp.fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify',{
+      method:'post',contentType:'application/json',muteHttpExceptions:true,
+      payload:JSON.stringify({secret:secret,response:data.token})
+    });
+    if(response.getResponseCode()!==200) throw new Error('Verification unavailable.');
+    result=JSON.parse(response.getContentText());
+  } catch(error) { throw new Error('Verification unavailable. Please try again.'); }
+  if(result.success!==true || result.hostname!==TURNSTILE_HOSTNAME || result.action!==TURNSTILE_ACTION ||
+      result.cdata!==data.submissionId+'_'+data.payloadHash) throw new Error('Verification failed. Please try again.');
+  var payload=JSON.stringify({id:data.submissionId,hash:data.payloadHash,expires:Date.now()+7200000});
+  return {payload:payload,signature:hex_(Utilities.computeHmacSha256Signature(payload,ticketSecret_()))};
+}
+function verifyTicket_(ticket) {
+  var secret=PropertiesService.getScriptProperties().getProperty('ticket-secret');
+  if(!secret || !ticket || typeof ticket.payload!=='string' || ticket.payload.length>300 ||
+      !equal_(ticket.signature,hex_(Utilities.computeHmacSha256Signature(ticket.payload,secret)))) throw new Error('Invalid verification ticket.');
+  var value=JSON.parse(ticket.payload);
+  if(!/^[a-f0-9-]{36}$/.test(value.id) || !/^[a-f0-9]{64}$/.test(value.hash) ||
+      !Number.isFinite(value.expires) || value.expires<Date.now() || value.expires>Date.now()+7205000) throw new Error('Verification expired. Please try again.');
+  return value;
+}
+// Reserve the signed ID before hashing/decoding the archive. Replays return the
+// existing receipt and never decode the ZIP or acquire the lock during sending.
+function reserve_(ticket) {
+  var props=PropertiesService.getScriptProperties(), key='submission:'+ticket.id;
+  var lock=LockService.getScriptLock(); lock.waitLock(10000);
+  try {
+    var previous=props.getProperty(key);
+    if(previous) {
+      var receipt=JSON.parse(previous);
+      if(receipt.hash!==ticket.hash) throw new Error('Submission already exists with different content. Contact staff.');
+      if(receipt.status!=='sent') throw new Error('Delivery is unconfirmed. Contact staff before sending again.');
+      return {existing:true};
+    }
+    var now=Date.now(), all=props.getProperties(), hourly=0, daily=0;
+    Object.keys(all).forEach(function(name) {
+      if(name.indexOf('submission:')!==0) return;
+      var row=JSON.parse(all[name]);
+      if(now-row.time>7*86400000) { props.deleteProperty(name); return; }
+      if(now-row.time<86400000) daily++;
+      if(now-row.time<3600000) hourly++;
+    });
+    if(hourly>=30 || daily>=100 || MailApp.getRemainingDailyQuota()<250) throw new Error('Email limit reached. Download the ZIP and contact staff.');
+    var record={hash:ticket.hash,time:now,status:'pending'};
+    props.setProperty(key,JSON.stringify(record));
+    return {key:key,record:record};
+  } finally { lock.releaseLock(); }
+}
+function finish_(reservation,status) {
+  reservation.record.status=status;
+  PropertiesService.getScriptProperties().setProperty(reservation.key,JSON.stringify(reservation.record));
 }
 
 // Check the central directory and every referenced local entry without inflating
@@ -93,7 +110,7 @@ function validateZip_(bytes) {
     if (u32(i) === 0x06054b50 && i + 22 + u16(i + 20) === bytes.length) { end = i; break; }
   }
   if (end < 0 || u16(end + 4) || u16(end + 6) || u16(end + 8) !== u16(end + 10)) fail();
-  var count = u16(end + 10), size = u32(end + 12), start = u32(end + 16), pos = start, expanded = 0;
+  var count = u16(end + 10), size = u32(end + 12), start = u32(end + 16), pos = start, expanded = 0, resumeDocuments = 0;
   if (count === 65535 || start + size !== end) fail();
   for (var n = 0; n < count; n++) {
     if (pos + 46 > end || u32(pos) !== 0x02014b50 || u16(pos + 34) || (u16(pos + 8) & 1)) fail();
@@ -126,12 +143,15 @@ function validateZip_(bytes) {
     var pathParts = entryName.split('/');
     if (entryName.charAt(0) === '/' || /[\\:\x00]/.test(entryName) ||
         pathParts.some(function (part, index) { return part === '.' || part === '..' || (!part && index < pathParts.length - 1); })) fail();
+    if (/^履歴書_[^/]+\.docx$/i.test(entryName)) resumeDocuments++;
+    else if (!/^写真_[^/]+\/$/.test(entryName) &&
+        !/^写真_[^/]+\/[^/]+\.(jpg|jpeg|png|webp|gif|bmp|heic|heif|avif|tif|tiff|pdf|doc|docx)$/i.test(entryName)) fail();
     var mode = (u32(pos + 38) >>> 16) & 0xf000;
     if ((mode && mode !== 0x8000 && mode !== 0x4000) || (u32(pos + 38) & 0x400)) fail();
     for (var j = 0; j < nameLength; j++) if (bytes[local + 30 + j] !== bytes[pos + 46 + j]) fail();
     pos = entryEnd;
   }
-  if (pos !== end || (!count && start !== 0)) fail();
+  if (pos !== end || resumeDocuments !== 1) fail();
 }
 
 function attachment_(data) {
@@ -153,18 +173,7 @@ function attachment_(data) {
   return Utilities.newBlob(bytes, 'application/zip', fileName);
 }
 
-function doPost(e) {
-  try {
-    var data = JSON.parse(e.postData.contents);
-    if (!data || typeof data !== 'object' || Array.isArray(data)) {
-      throw new Error('Invalid request.');
-    }
-
-    // The live frontend uses public translation APIs; do not expose a quota proxy.
-    if (data.action) throw new Error('Unsupported action.');
-    verifyChallenge_(data);
-
-    var zipBlob = attachment_(data);
+function sendMail_(data,zipBlob) {
     var subjectName = String(data.fullname || '応募者').replace(/[\r\n]/g, ' ').slice(0, 120);
     var fields = [
       ['氏名 (Name)', data.fullname], ['フリガナ', data.furigana],
@@ -184,17 +193,40 @@ function doPost(e) {
       }).join('') + '</table><p>' + attachmentNote + '</p><hr><p>YourBright Co., Ltd. — 履歴書自動送信システム</p></div>';
 
     // Never trust recipients supplied by an anonymous caller.
-    sendOnce_(data, function () { MailApp.sendEmail(RESUME_RECIPIENT, '【履歴書】' + subjectName, body, {
+    MailApp.sendEmail(RESUME_RECIPIENT, '【履歴書】' + subjectName, body, {
       htmlBody: htmlBody, attachments: [zipBlob], name: 'YourBright 履歴書システム'
-    }); });
-    return jsonResponse_({success: true, message: 'Email sent successfully to: ' + RESUME_RECIPIENT});
-  } catch (error) {
-    return jsonResponse_({success: false, error: String(error)});
+    });
+}
+
+function doPost(e) {
+  var reservation,mailStarted=false;
+  try {
+    if(!e || !e.postData || typeof e.postData.contents!=='string' || e.postData.contents.length>MAX_REQUEST_CHARS) throw new Error('Invalid request size.');
+    var request=JSON.parse(e.postData.contents);
+    if(!request || typeof request!=='object' || Array.isArray(request)) throw new Error('Invalid request.');
+    if(request.action==='verify') {
+      if(e.postData.contents.length>8192) throw new Error('Invalid verification request size.');
+      return jsonResponse_({success:true,ticket:issueTicket_(request)});
+    }
+    if(request.action) throw new Error('Unsupported action.');
+    var ticket=verifyTicket_(request.ticket);
+    if(typeof request.payload!=='string' || request.payload.length>MAX_REQUEST_CHARS) throw new Error('Invalid payload.');
+    reservation=reserve_(ticket);
+    if(reservation.existing) return jsonResponse_({success:true,reused:true});
+    if(!equal_(digest_(request.payload),ticket.hash)) throw new Error('Payload does not match verification.');
+    var data=JSON.parse(request.payload);
+    if(!data || typeof data!=='object' || Array.isArray(data)) throw new Error('Invalid payload.');
+    ['fullname','furigana','nationality','visa','phone','email','fileName'].forEach(function(field) {
+      if(data[field]!==undefined && (typeof data[field]!=='string' || data[field].length>500)) throw new Error('Invalid applicant field.');
+    });
+    var zipBlob=attachment_(data);
+    mailStarted=true;
+    sendMail_(data,zipBlob);
+    finish_(reservation,'sent');
+    return jsonResponse_({success:true,message:'Email sent successfully to: '+RESUME_RECIPIENT});
+  } catch(error) {
+    if(reservation && !reservation.existing && !mailStarted) finish_(reservation,'rejected');
+    return jsonResponse_({success:false,error:String(error)});
   }
 }
-
-// Authorizes the send-only scope without sending a message.
-function authorizeEmail() {
-  return MailApp.getRemainingDailyQuota();
-}
-
+function authorizeEmail() { return MailApp.getRemainingDailyQuota(); }
