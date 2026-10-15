@@ -199,3 +199,20 @@ test('traversal, absolute, Windows, and symlink ZIP entries are rejected', () =>
     assert.equal(app.sent.length,0);
   }
 });
+
+test('ZIP compression and alternate names in Unicode extra fields are rejected', () => {
+  function archive(method, alternate) {
+    const name=Buffer.from('safe.txt'),path=Buffer.from(alternate||'safe.txt');
+    const extra=Buffer.alloc(9+path.length);extra.writeUInt16LE(0x7075);extra.writeUInt16LE(5+path.length,2);extra[4]=1;path.copy(extra,9);
+    const local=Buffer.alloc(30),central=Buffer.alloc(46),end=Buffer.alloc(22);
+    local.writeUInt32LE(0x04034b50);local.writeUInt16LE(method,8);local.writeUInt16LE(name.length,26);local.writeUInt16LE(extra.length,28);
+    central.writeUInt32LE(0x02014b50);central.writeUInt16LE(method,10);central.writeUInt16LE(name.length,28);central.writeUInt16LE(extra.length,30);
+    end.writeUInt32LE(0x06054b50);end.writeUInt16LE(1,8);end.writeUInt16LE(1,10);end.writeUInt32LE(46+name.length+extra.length,12);end.writeUInt32LE(30+name.length+extra.length,16);
+    return Buffer.concat([local,name,extra,central,name,extra,end]).toString('base64');
+  }
+  const app=server();
+  assert.equal(app.post(app.signed({zipBase64:archive(0,'safe.txt')})).success,true);
+  assert.equal(app.post(app.signed({zipBase64:archive(0,'../escape.txt')})).success,false);
+  assert.equal(app.post(app.signed({zipBase64:archive(8,'safe.txt')})).success,false);
+  assert.equal(app.sent.length,1);
+});

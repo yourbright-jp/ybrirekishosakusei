@@ -82,7 +82,8 @@ function sendOnce_(data, send) {
 }
 
 // Check the central directory and every referenced local entry without inflating
-// untrusted compressed bytes (which could be a decompression bomb).
+// untrusted compressed bytes. The frontend uses JSZip default STORE; reject
+// top-level compression so declared-size lies cannot hide an expansion bomb.
 function validateZip_(bytes) {
   function u16(i) { return (bytes[i] & 255) + (bytes[i + 1] & 255) * 256; }
   function u32(i) { return u16(i) + u16(i + 2) * 65536; }
@@ -100,13 +101,28 @@ function validateZip_(bytes) {
     var local = u32(pos + 42), compressed = u32(pos + 20), uncompressed = u32(pos + 24), method = u16(pos + 10);
     expanded += uncompressed;
     if (expanded > 100 * 1024 * 1024 || uncompressed > Math.max(1, compressed) * 200 ||
-        (method !== 0 && method !== 8) || (method === 0 && compressed !== uncompressed)) fail();
+        method !== 0 || (method === 0 && compressed !== uncompressed)) fail();
     if (entryEnd > end || local + 30 > start || u32(local) !== 0x04034b50 || u16(local + 26) !== nameLength ||
         local + 30 + nameLength + u16(local + 28) + compressed > start ||
         u16(local + 8) !== method || u16(local + 6) !== u16(pos + 8) ||
         (!(u16(pos + 8) & 8) && (u32(local + 18) !== compressed || u32(local + 22) !== uncompressed || u32(local + 14) !== u32(pos + 16)))) fail();
     if (!nameLength || nameLength > 4096) fail();
     var entryName = Utilities.newBlob(bytes.slice(pos + 46, pos + 46 + nameLength)).getDataAsString('UTF-8');
+    function checkExtras(offset, length) {
+      var finish = offset + length;
+      while (offset < finish) {
+        if (offset + 4 > finish) fail();
+        var type = u16(offset), fieldLength = u16(offset + 2), value = offset + 4;
+        if (value + fieldLength > finish) fail();
+        if (type === 0x7075) {
+          if (fieldLength < 5 || (bytes[value] & 255) !== 1 ||
+              Utilities.newBlob(bytes.slice(value + 5, value + fieldLength)).getDataAsString('UTF-8') !== entryName) fail();
+        } else if (type !== 0x5455) fail(); // Only Unicode-path and timestamp metadata are used.
+        offset = value + fieldLength;
+      }
+    }
+    checkExtras(pos + 46 + nameLength, u16(pos + 30));
+    checkExtras(local + 30 + nameLength, u16(local + 28));
     var pathParts = entryName.split('/');
     if (entryName.charAt(0) === '/' || /[\\:\x00]/.test(entryName) ||
         pathParts.some(function (part, index) { return part === '.' || part === '..' || (!part && index < pathParts.length - 1); })) fail();
@@ -182,14 +198,3 @@ function authorizeEmail() {
   return MailApp.getRemainingDailyQuota();
 }
 
-// Run only after approval. Uses synthetic data and sends exactly one message to staff.
-function testSend() {
-  var zip = Utilities.zip([Utilities.newBlob('YourBright resume email recovery check. No applicant data.', 'text/plain', 'recovery-check.txt')], 'recovery-check.zip');
-  var challenge = challenge_(), proof = 0;
-  while (digest_(challenge.token + ':' + proof).slice(0, 3) !== '000') proof++;
-  var result = doPost({postData: {contents: JSON.stringify({
-    challenge: challenge, proof: proof, fullname: 'SYSTEM RECOVERY TEST 20261015',
-    zipBase64: Utilities.base64Encode(zip.getBytes()), fileName: 'recovery-check.zip'
-  })}});
-  Logger.log(result.getContent());
-}
