@@ -86,14 +86,19 @@ function validateZip_(bytes) {
     if (u32(i) === 0x06054b50 && i + 22 + u16(i + 20) === bytes.length) { end = i; break; }
   }
   if (end < 0 || u16(end + 4) || u16(end + 6) || u16(end + 8) !== u16(end + 10)) fail();
-  var count = u16(end + 10), size = u32(end + 12), start = u32(end + 16), pos = start;
+  var count = u16(end + 10), size = u32(end + 12), start = u32(end + 16), pos = start, expanded = 0;
   if (count === 65535 || start + size !== end) fail();
   for (var n = 0; n < count; n++) {
     if (pos + 46 > end || u32(pos) !== 0x02014b50 || u16(pos + 34) || (u16(pos + 8) & 1)) fail();
     var nameLength = u16(pos + 28), entryEnd = pos + 46 + nameLength + u16(pos + 30) + u16(pos + 32);
-    var local = u32(pos + 42), compressed = u32(pos + 20);
+    var local = u32(pos + 42), compressed = u32(pos + 20), uncompressed = u32(pos + 24), method = u16(pos + 10);
+    expanded += uncompressed;
+    if (expanded > 100 * 1024 * 1024 || uncompressed > Math.max(1, compressed) * 200 ||
+        (method !== 0 && method !== 8) || (method === 0 && compressed !== uncompressed)) fail();
     if (entryEnd > end || local + 30 > start || u32(local) !== 0x04034b50 || u16(local + 26) !== nameLength ||
-        local + 30 + nameLength + u16(local + 28) + compressed > start) fail();
+        local + 30 + nameLength + u16(local + 28) + compressed > start ||
+        u16(local + 8) !== method || u16(local + 6) !== u16(pos + 8) ||
+        (!(u16(pos + 8) & 8) && (u32(local + 18) !== compressed || u32(local + 22) !== uncompressed || u32(local + 14) !== u32(pos + 16)))) fail();
     for (var j = 0; j < nameLength; j++) if (bytes[local + 30 + j] !== bytes[pos + 46 + j]) fail();
     pos = entryEnd;
   }
@@ -126,12 +131,9 @@ function doPost(e) {
       throw new Error('Invalid request.');
     }
 
-    // Retain the existing translation request contract.
-    if (data.action === 'translate') {
-      var text = data.text || '';
-      var translated = text.trim() ? LanguageApp.translate(text, data.sourceLang || '', data.targetLang || 'ja') : '';
-      return jsonResponse_({success: true, translatedText: translated});
-    }
+    // The live frontend uses public translation APIs; do not expose a quota proxy.
+    if (data.action) throw new Error('Unsupported action.');
+    verifyChallenge_(data);
 
     var zipBlob = attachment_(data);
     var subjectName = String(data.fullname || '応募者').replace(/[\r\n]/g, ' ').slice(0, 120);

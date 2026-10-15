@@ -102,11 +102,10 @@ test('mail provider failure is returned as failure', () => {
   assert.match(result.error, /Daily quota exceeded/);
 });
 
-test('the previous translation request contract remains available without sending mail', () => {
-  const app = server();
-  assert.equal(app.post({ action: 'translate', text: 'hello', sourceLang: 'en', targetLang: 'ja' }).translatedText, 'en:ja:hello');
-  assert.equal(app.post({ action: 'translate', text: ' ' }).translatedText, '');
-  assert.equal(app.sent.length, 0);
+test('unused translation requests are rejected without consuming translation quota', () => {
+  const app=server();
+  assert.equal(app.post({action:'translate',text:'hello'}).success,false);
+  assert.equal(app.sent.length,0);
 });
 
 test('unsigned, forged, expired, and unsolved challenges never send mail', () => {
@@ -146,4 +145,25 @@ test('truncated and damaged ZIP central directories never send mail', () => {
     assert.equal(app.post(app.signed({zipBase64:bytes.toString('base64')})).success,false);
   }
   assert.equal(app.sent.length,0);
+});
+
+test('invalid proofs are rejected before large attachments can be decoded', () => {
+  const app=server();
+  app.context.Utilities.base64Decode=()=>{throw new Error('Must not decode unsigned data');};
+  const result=app.post(request());
+  assert.match(result.error,/challenge/);
+  assert.equal(app.sent.length,0);
+});
+test('ordinary ZIP entries pass, declared expansion bombs and mismatched headers are rejected', () => {
+  const name=Buffer.from('recovery.txt'),body=Buffer.from('synthetic recovery check');
+  const local=Buffer.alloc(30);local.writeUInt32LE(0x04034b50);local.writeUInt16LE(20,4);local.writeUInt32LE(body.length,18);local.writeUInt32LE(body.length,22);local.writeUInt16LE(name.length,26);
+  const central=Buffer.alloc(46);central.writeUInt32LE(0x02014b50);central.writeUInt16LE(20,4);central.writeUInt16LE(20,6);central.writeUInt32LE(body.length,20);central.writeUInt32LE(body.length,24);central.writeUInt16LE(name.length,28);
+  const end=Buffer.alloc(22);end.writeUInt32LE(0x06054b50);end.writeUInt16LE(1,8);end.writeUInt16LE(1,10);end.writeUInt32LE(central.length+name.length,12);end.writeUInt32LE(local.length+name.length+body.length,16);
+  const zip=Buffer.concat([local,name,body,central,name,end]);
+  const app=server();assert.equal(app.post(app.signed({zipBase64:zip.toString('base64')})).success,true);
+  const bad=Buffer.from(zip);bad.writeUInt32LE(2*1024*1024*1024,local.length+name.length+body.length+24);
+  assert.equal(app.post(app.signed({zipBase64:bad.toString('base64')})).success,false);
+  const mismatch=Buffer.from(zip);mismatch.writeUInt32LE(0,22);
+  assert.equal(app.post(app.signed({zipBase64:mismatch.toString('base64')})).success,false);
+  assert.equal(app.sent.length,1);
 });
