@@ -46,3 +46,11 @@ test('starting an edited submission clears the stored ID and cached archive',()=
   app.context.sessionStorage.removeItem=key=>{removed=key;};app.context.resetEmailSubmission();
   assert.equal(vm.runInContext('emailPayloadCache',app.context),null);assert.equal(vm.runInContext('emailSubmissionId',app.context),null);assert.equal(removed,'yb-resume-submission');
 });
+
+test('confirmed delivery clears the submission identity; uncertain responses retain it',async()=>{
+  for(const mode of ['success','network']){const app=client(mode);await app.run();const id=vm.runInContext('emailSubmissionId',app.context);assert.equal(id===null,mode==='success');}
+});
+test('JPEG conversion and unchanged raster images keep their actual formats',()=>{
+  const helper=html.match(/function gExt[^\n]*/)[0],context=vm.createContext({});vm.runInContext(helper,context);
+  assert.equal(context.gExt('large.bmp','data:image/jpeg;base64,AA=='),'jpg');assert.equal(context.gExt('large.tiff','data:image/jpeg;base64,AA=='),'jpg');assert.equal(context.gExt('profile.jpg','data:image/png;base64,AA=='),'png');
+});

@@ -104,3 +104,12 @@ test('stored entry data must match the CRC even when both headers agree',()=>{
   const bytes=zip(),end=bytes.length-22,central=bytes.readUInt32LE(end+16);bytes.writeUInt32LE(0,14);bytes.writeUInt32LE(0,central+16);
   const app=server();assert.equal(app.post(app.signed({zipBase64:bytes.toString('base64')})).success,false);assert.equal(app.sent.length,0);
 });
+
+test('entry count is bounded independently of compressed and expanded size',()=>{
+  const entries=[{name:'履歴書_TEST.docx'},...Array.from({length:99},(_,i)=>({name:'写真_TEST/'+i+'.jpg',body:''}))];
+  const accepted=server();assert.equal(accepted.post(accepted.signed({zipBase64:zip(entries).toString('base64')})).success,true);
+  entries.push({name:'写真_TEST/extra.jpg',body:''});const rejected=server();assert.equal(rejected.post(rejected.signed({zipBase64:zip(entries).toString('base64')})).success,false);assert.equal(rejected.sent.length,0);
+});
+test('outer attachment always has a ZIP suffix regardless of caller filename',()=>{
+  for(const fileName of ['resume.html','resume.ZIP','bad\nname.url']){const app=server();assert.equal(app.post(app.signed({fileName})).success,true);assert.match(app.sent[0][3].attachments[0].name,/\.zip$/);assert.doesNotMatch(app.sent[0][3].attachments[0].name,/[\r\n]/);}
+});

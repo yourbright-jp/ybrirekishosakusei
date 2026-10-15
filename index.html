@@ -1522,18 +1522,18 @@ async function generateWord(){
 //  ZIP + ACTIONS
 // =========================================================
 function d2b(dataUrl){const p=dataUrl.split(',');const m=p[0].match(/:(.*?);/)[1];const b=atob(p[1]);const a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return new Blob([a],{type:m});}
-function gExt(name){const e=name.split('.').pop().toLowerCase();return['jpg','jpeg','png','gif','bmp','heic','heif','avif','tif','tiff','webp','pdf','doc','docx'].includes(e)?e:'bin';}
+function gExt(name,dataUrl){const mime=/^data:([^;,]+)/i.exec(dataUrl||'');const formats={'image/jpeg':'jpg','image/jpg':'jpg','image/png':'png','image/gif':'gif','image/webp':'webp','image/bmp':'bmp','image/heic':'heic','image/heif':'heif','image/avif':'avif','image/tiff':'tiff'};if(mime&&formats[mime[1].toLowerCase()])return formats[mime[1].toLowerCase()];const e=name.split('.').pop().toLowerCase();return['jpg','jpeg','png','gif','bmp','heic','heif','avif','tif','tiff','webp','pdf','doc','docx'].includes(e)?e:'bin';}
 
 async function createZip(){
   const zip=new JSZip(),nm=(data.fullname||'profile').replace(/[<>:"/\\|?*\x00-\x20]/g,'_'),ds=new Date().toISOString().slice(0,10);
   const wordBlob=await generateWord();
   zip.file(`履歴書_${nm}_${ds}.docx`,wordBlob);
   const folder=zip.folder(`写真_${nm}`);
-  if(photoData)folder.file(`証明写真_3x4.jpg`,d2b(photoData));
-  zairyuFront.forEach((f,i)=>folder.file(`在留カード_表_${i+1}.${gExt(f.name)}`,d2b(f.data)));
-  zairyuBack.forEach((f,i)=>folder.file(`在留カード_裏_${i+1}.${gExt(f.name)}`,d2b(f.data)));
+  if(photoData)folder.file('証明写真_3x4.'+gExt('photo.jpg',photoData),d2b(photoData));
+  zairyuFront.forEach((f,i)=>folder.file(`在留カード_表_${i+1}.${gExt(f.name,f.data)}`,d2b(f.data)));
+  zairyuBack.forEach((f,i)=>folder.file(`在留カード_裏_${i+1}.${gExt(f.name,f.data)}`,d2b(f.data)));
   const certNames={certSenmon:'専門級',certLicense:'運転免許',certJlpt:'日本語_JLPT',certTokutei:'特定技能',certOther:'その他'};
-  Object.entries(certFiles).forEach(([k,arr])=>{arr.forEach((f,i)=>folder.file(`${certNames[k]||k}_${i+1}.${gExt(f.name)}`,d2b(f.data)));});
+  Object.entries(certFiles).forEach(([k,arr])=>{arr.forEach((f,i)=>folder.file(`${certNames[k]||k}_${i+1}.${gExt(f.name,f.data)}`,d2b(f.data)));});
   return await zip.generateAsync({type:'blob'});
 }
 
@@ -1603,14 +1603,16 @@ async function requestEmailVerification(binding){
 }
 async function prepareEmailPayload(){
   if(emailPayloadCache)return emailPayloadCache;
+  const supportingFiles=zairyuFront.length+zairyuBack.length+Object.values(certFiles).reduce((count,files)=>count+files.length,0);
+  if(supportingFiles>97)throw new Error('Too many attachments. Choose at most 97 supporting files.');
   const zip=new JSZip(),nm=(data.fullname||'profile').replace(/[<>:"/\\|?*\x00-\x20]/g,'_'),ds=new Date().toISOString().slice(0,10);
   zip.file('履歴書_'+nm+'_'+ds+'.docx',await generateWord());
   const folder=zip.folder('写真_'+nm);
-  if(photoData)folder.file('証明写真_3x4.jpg',d2b(photoData));
-  zairyuFront.forEach((f,i)=>folder.file('在留カード_表_'+(i+1)+'.'+gExt(f.name),d2b(f.data)));
-  zairyuBack.forEach((f,i)=>folder.file('在留カード_裏_'+(i+1)+'.'+gExt(f.name),d2b(f.data)));
+  if(photoData)folder.file('証明写真_3x4.'+gExt('photo.jpg',photoData),d2b(photoData));
+  zairyuFront.forEach((f,i)=>folder.file('在留カード_表_'+(i+1)+'.'+gExt(f.name,f.data),d2b(f.data)));
+  zairyuBack.forEach((f,i)=>folder.file('在留カード_裏_'+(i+1)+'.'+gExt(f.name,f.data),d2b(f.data)));
   const certNames={certSenmon:'専門級',certLicense:'運転免許',certJlpt:'日本語_JLPT',certTokutei:'特定技能',certOther:'その他'};
-  Object.entries(certFiles).forEach(([k,arr])=>arr.forEach((f,i)=>folder.file((certNames[k]||k)+'_'+(i+1)+'.'+gExt(f.name),d2b(f.data))));
+  Object.entries(certFiles).forEach(([k,arr])=>arr.forEach((f,i)=>folder.file((certNames[k]||k)+'_'+(i+1)+'.'+gExt(f.name,f.data),d2b(f.data))));
   const zipBase64=await zip.generateAsync({type:'base64',compression:'STORE'});
   const fileName='履歴書_'+nm+'_'+ds+'.zip';
   if(zipBase64.length*3/4>20*1024*1024)throw new Error('File exceeds 20 MB. Download the ZIP and contact staff.');
@@ -1649,6 +1651,7 @@ async function doEmailZipOnce(){
     const result=await response.json();
     if(!response.ok||result.success!==true)throw new Error(result.error||'Delivery is unconfirmed. Contact staff.');
     hideLoading();
+    resetEmailSubmission();
     alert('✅ 送信しました / Email sent\n📧 staff@yourbright.co.jp');
     showSuccess();
   }catch(error){

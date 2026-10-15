@@ -127,7 +127,7 @@ function validateZip_(bytes) {
   }
   if (end < 0 || u16(end + 4) || u16(end + 6) || u16(end + 8) !== u16(end + 10)) fail();
   var count = u16(end + 10), size = u32(end + 12), start = u32(end + 16), pos = start, expanded = 0, resumeDocuments = 0;
-  if (count === 65535 || start + size !== end) fail();
+  if (count > 100 || start + size !== end) fail();
   for (var n = 0; n < count; n++) {
     if (pos + 46 > end || u32(pos) !== 0x02014b50 || u16(pos + 34) || (u16(pos + 8) & 1)) fail();
     var nameLength = u16(pos + 28), entryEnd = pos + 46 + nameLength + u16(pos + 30) + u16(pos + 32);
@@ -187,7 +187,7 @@ function attachment_(data) {
     throw new Error('Invalid ZIP attachment or attachment exceeds 20 MB.');
   }
   validateZip_(bytes);
-  var fileName = String(data.fileName || '履歴書.zip').replace(/[\r\n/\\]/g, '_').slice(0, 180);
+  var fileName = String(data.fileName || '履歴書.zip').replace(/[<>:\x00-\x20/\\|?*]/g, '_').replace(/\.zip$/i, '').slice(0, 174) + '.zip';
   return Utilities.newBlob(bytes, 'application/zip', fileName);
 }
 
