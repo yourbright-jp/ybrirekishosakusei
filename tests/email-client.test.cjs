@@ -7,7 +7,7 @@ function client(mode){
   const context=vm.createContext({TextEncoder,Uint8Array,Blob,Date,JSON,crypto:crypto.webcrypto,atob,
     sessionStorage:{getItem(){return null;},setItem(){}},
     JSZip:class{file(){}folder(){return this;}async generateAsync(){generated++;return Buffer.from('ZIP fixture '+generated).toString('base64');}},
-    data:{fullname:'SYSTEM TEST'},photoData:null,zairyuFront:[],zairyuBack:[],certFiles:{},getSelectedEmails:()=>['staff@yourbright.co.jp'],t:()=>'',showLoading(){},hideLoading(){},alert:message=>alerts.push(message),console:{error(){}},generateWord:async()=>new Blob(['synthetic']),mobileSave(){downloads++;},showSuccess(){success++;},
+    data:{fullname:'SYSTEM TEST'},photoData:null,zairyuFront:[],zairyuBack:[],certFiles:{},getSelectedEmails:()=>['recruit@yourbright.co.jp'],t:()=>'',showLoading(){},hideLoading(){},alert:message=>alerts.push(message),console:{error(){}},generateWord:async()=>new Blob(['synthetic']),mobileSave(){downloads++;},showSuccess(){success++;},
     fetch:async(url,options)=>{
       calls.push({url,body:JSON.parse(options.body)});
       if(JSON.parse(options.body).action==='verify')return {ok:true,json:async()=>({success:mode!=='verify-failure',ticket:{payload:'fixture',signature:'fixture'}})};

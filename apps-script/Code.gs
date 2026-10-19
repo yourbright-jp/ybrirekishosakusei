@@ -1,5 +1,5 @@
 // Deploy as yamashita.hayato@yourbright.co.jp. Recipient is fixed server-side.
-var RESUME_RECIPIENT = 'staff@yourbright.co.jp';
+var RESUME_RECIPIENT = 'recruit@yourbright.co.jp';
 var RESUME_VERSION = '2026-10-15-turnstile-v1';
 var MAX_ZIP_BYTES = 20 * 1024 * 1024;
 var MAX_REQUEST_CHARS = 29 * 1024 * 1024;

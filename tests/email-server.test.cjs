@@ -43,8 +43,8 @@ function server(options={}){
 test('health and scope authorization send no email',()=>{
   const app=server();assert.equal(JSON.parse(app.context.doGet().getContent()).configured,true);assert.equal(app.context.authorizeEmail(),1000);assert.equal(app.sent.length,0);
 });
-test('successful proof binds exact payload; only staff receives the message',()=>{
-  const app=server(),data=app.signed({emails:['attacker@example.org']});assert.ok(data.ticket);assert.equal(app.post(data).success,true);assert.equal(app.sent.length,1);assert.equal(app.sent[0][0],'staff@yourbright.co.jp');assert.deepEqual(Buffer.from(app.sent[0][3].attachments[0].bytes),zip());
+test('successful proof binds exact payload; only CA receives the message',()=>{
+  const app=server(),data=app.signed({emails:['attacker@example.org']});assert.ok(data.ticket);assert.equal(app.post(data).success,true);assert.equal(app.sent.length,1);assert.equal(app.sent[0][0],'recruit@yourbright.co.jp');assert.deepEqual(Buffer.from(app.sent[0][3].attachments[0].bytes),zip());
 });
 test('invalid token, hostname, action or cdata cannot issue a ticket',()=>{
   for(const verification of [{success:false},{hostname:'evil.example'},{action:'other'},{cdata:'other'}]){
