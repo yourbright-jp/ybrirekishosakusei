@@ -446,7 +446,7 @@ let licRows=[{date:'',detail:''}];
 // 業務経験 builder state (appeal — optional)
 const workExpInit=()=>({facility:'',facilityOther:'',residents:'',kaigodo:'',duties:{meal:false,excret:false,bath:false,transfer:false,recre:false,other:false,life:false},night:false,nightCount:'',nightStaff:'',nightUsers:'',recHand:false,recPC:false,recTablet:false});
 let workExp=workExpInit();
-const emails=["staff@yourbright.co.jp"];
+const emails=["recruit@yourbright.co.jp"];
 
 function t(k){return(L[lang]&&L[lang][k])||L['vi'][k]||k}
 function setLang(l,btn){lang=l;document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');updateUI();}
@@ -1631,11 +1631,11 @@ async function doEmailZipOnce(){
     if(!response.ok||result.success!==true)throw new Error(result.error||'Delivery is unconfirmed. Contact staff.');
     hideLoading();
     resetEmailSubmission();
-    alert('✅ 送信しました / Email sent\n📧 staff@yourbright.co.jp');
+    alert('✅ 送信しました / Email sent\n📧 recruit@yourbright.co.jp');
     showSuccess();
   }catch(error){
     hideLoading();console.error('Email delivery not confirmed:',error);
-    alert('⚠️ 送信を確認できません / Delivery unconfirmed.\n'+error.message+'\nZIPを保存して staff@yourbright.co.jp にご連絡ください。');
+    alert('⚠️ 送信を確認できません / Delivery unconfirmed.\n'+error.message+'\nZIPを保存して recruit@yourbright.co.jp にご連絡ください。');
   }finally{
     // Keep the exact bytes in memory until editing/restart. ZIP timestamps must
     // not create a different payload when retrying after a lost response.
